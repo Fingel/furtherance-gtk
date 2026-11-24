@@ -16,3 +16,4 @@ target/
 *.pdb
 
 #Cargo.lock
+.build/
