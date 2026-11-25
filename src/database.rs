@@ -468,9 +468,13 @@ pub fn import_db(new_db: String) -> Result<()> {
             )),
         );
 
-        dialog.connect_response(glib::clone!(#[weak] dialog, move |_, _| {
-            dialog.close();
-        }));
+        dialog.connect_response(glib::clone!(
+            #[weak]
+            dialog,
+            move |_, _| {
+                dialog.close();
+            }
+        ));
 
         dialog.show();
 

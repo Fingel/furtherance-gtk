@@ -119,8 +119,10 @@ impl FurReport {
         imp.range_combo.set_active_id(Some("this_week_item"));
         imp.filter_combo.set_active_id(Some("tasks_item"));
 
-        imp.range_combo
-            .connect_changed(glib::clone!(#[weak(rename_to = this)] self, move |combo|{
+        imp.range_combo.connect_changed(glib::clone!(
+            #[weak(rename_to = this)]
+            self,
+            move |combo| {
                 let imp = imp::FurReport::from_obj(&this);
                 if combo.active_id().unwrap() != "date_range_item" {
                     imp.date_range_box.set_visible(false);
@@ -128,32 +130,44 @@ impl FurReport {
                 } else {
                     imp.date_range_box.set_visible(true);
                 }
-            }));
+            }
+        ));
 
-        imp.filter_check
-            .connect_toggled(glib::clone!(#[weak(rename_to = this)] self, move |_|{
+        imp.filter_check.connect_toggled(glib::clone!(
+            #[weak(rename_to = this)]
+            self,
+            move |_| {
                 let imp = imp::FurReport::from_obj(&this);
                 if imp.filter_box.get_visible() {
                     imp.filter_box.set_visible(false);
                 } else {
                     imp.filter_box.set_visible(true);
                 }
-            }));
+            }
+        ));
 
-        imp.filter_combo
-            .connect_changed(glib::clone!(#[weak(rename_to = this)] self, move |combo|{
+        imp.filter_combo.connect_changed(glib::clone!(
+            #[weak(rename_to = this)]
+            self,
+            move |combo| {
                 let imp = imp::FurReport::from_obj(&this);
                 if combo.active_id().unwrap() == "tasks_item" {
-                    imp.filter_entry.set_placeholder_text(Some(&gettext("Task, Task 2")));
+                    imp.filter_entry
+                        .set_placeholder_text(Some(&gettext("Task, Task 2")));
                 } else {
-                    imp.filter_entry.set_placeholder_text(Some(&gettext("tag, tag 2")));
+                    imp.filter_entry
+                        .set_placeholder_text(Some(&gettext("tag, tag 2")));
                 }
-            }));
+            }
+        ));
 
-        imp.refresh_btn
-            .connect_clicked(glib::clone!(#[weak(rename_to = this)] self, move |_|{
+        imp.refresh_btn.connect_clicked(glib::clone!(
+            #[weak(rename_to = this)]
+            self,
+            move |_| {
                 this.refresh_report();
-            }));
+            }
+        ));
 
         let renderer = gtk::CellRendererText::new();
         let task_column =

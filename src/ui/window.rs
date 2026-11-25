@@ -213,11 +213,16 @@ impl FurtheranceWindow {
         let start_time = Rc::new(RefCell::new(Local::now()));
         let stop_time = Rc::new(RefCell::new(Local::now()));
 
-        imp.task_input
-            .connect_changed(glib::clone!(#[weak(rename_to = this)] self, move |task_input| {
+        imp.task_input.connect_changed(glib::clone!(
+            #[weak(rename_to = this)]
+            self,
+            move |task_input| {
                 let imp2 = imp::FurtheranceWindow::from_obj(&this);
                 let task_input_text = task_input.text();
-                let mut split_tags: Vec<String> = task_input_text.split('#').map(|tag| String::from(tag.trim())).collect();
+                let mut split_tags: Vec<String> = task_input_text
+                    .split('#')
+                    .map(|tag| String::from(tag.trim()))
+                    .collect();
                 let task_name = split_tags.remove(0);
                 if task_name.is_empty() {
                     imp2.start_button.set_sensitive(false);
@@ -226,342 +231,399 @@ impl FurtheranceWindow {
                 }
 
                 if settings_manager::get_bool("autocomplete") {
-                    if task_input.text().len() >= FurtheranceWindow::MIN_PREFIX_LENGTH.try_into().unwrap() {
+                    if task_input.text().len()
+                        >= FurtheranceWindow::MIN_PREFIX_LENGTH.try_into().unwrap()
+                    {
                         if task_input.completion().is_some() {
                             let task_autocomplete = task_input.completion().unwrap();
-                            let model = Self::update_list_model(task_name.to_string(), split_tags).unwrap();
+                            let model =
+                                Self::update_list_model(task_name.to_string(), split_tags).unwrap();
                             task_autocomplete.set_model(Some(&model));
                         }
                     }
                 }
-            }));
+            }
+        ));
 
-        imp.start_button.connect_clicked(glib::clone!(#[weak(rename_to = this)] self, move |button| {
-            let imp2 = imp::FurtheranceWindow::from_obj(&this);
-            if !*imp2.running.lock().unwrap() {
-                // Remove auto-complete to prevent drop-down from sticking
-                imp2.task_input.set_completion(None);
+        imp.start_button.connect_clicked(glib::clone!(
+            #[weak(rename_to = this)]
+            self,
+            move |button| {
+                let imp2 = imp::FurtheranceWindow::from_obj(&this);
+                if !*imp2.running.lock().unwrap() {
+                    // Remove auto-complete to prevent drop-down from sticking
+                    imp2.task_input.set_completion(None);
 
-                if settings_manager::get_bool("pomodoro") && !*imp2.pomodoro_continue.lock().unwrap() {
-                    let pomodoro_time = settings_manager::get_int("pomodoro-time");
-                    let mut secs: i32 = 0;
-                    let mut secs_only: i32 = 0;
-                    let mut mins: i32 = pomodoro_time;
-                    let mut hrs: i32 = mins / 60;
-                    mins %= 60;
+                    if settings_manager::get_bool("pomodoro")
+                        && !*imp2.pomodoro_continue.lock().unwrap()
+                    {
+                        let pomodoro_time = settings_manager::get_int("pomodoro-time");
+                        let mut secs: i32 = 0;
+                        let mut secs_only: i32 = 0;
+                        let mut mins: i32 = pomodoro_time;
+                        let mut hrs: i32 = mins / 60;
+                        mins %= 60;
 
-                    *imp2.running.lock().unwrap() = true;
-                    *start_time.borrow_mut() = Local::now();
-                    let timer_start = *start_time.borrow();
-                    imp2.task_input.set_sensitive(false);
-                    let duration = Duration::new(1,0);
-                    timeout_add_local(duration, glib::clone!(#[strong(rename_to = this_clone)] this, move || {
-                        let imp3 = imp::FurtheranceWindow::from_obj(&this_clone);
-                        if *imp3.running.lock().unwrap() {
-                            secs -= 1;
-                            if secs < 0 {
-                                secs = 59;
-                                mins -= 1;
-                                if mins < 0 {
-                                    mins = 59;
-                                    hrs -= 1;
-                                }
-                            }
-                            let watch_text: &str = &format!("{:02}:{:02}:{:02}", hrs, mins, secs).to_string();
-                            this_clone.set_watch_time(watch_text);
-
-                            if settings_manager::get_bool("inclusive-total") {
-                                secs_only += 1;
-                                imp3.history_box.set_todays_time(secs_only);
-                            }
-                        }
-                        if settings_manager::get_bool("autosave") {
-                            let autosave_mins = settings_manager::get_int("autosave-time");
-                            let total_elapsed = (pomodoro_time * 60) - (hrs * 3600) - (mins * 60) - secs;
-                            if total_elapsed % (autosave_mins * 60) == 0 {
-                                this_clone.write_autosave(timer_start);
-                            }
-                        }
-                        if hrs == 0 && mins == 0 && secs == 0 {
-                            let timer_stop = Local::now();
-                            *imp3.running.lock().unwrap() = false;
-                            this_clone.pomodoro_over(timer_start, timer_stop);
-                        }
-                        if *imp3.running.lock().unwrap() {
-                            ControlFlow::Continue
-                        } else {
-                            ControlFlow::Break
-                        }
-                    }));
-                } else {
-                    let mut secs: i32 = 0;
-                    let mut secs_only: i32 = 0;
-                    let mut mins: i32 = 0;
-                    let mut hrs: i32 = 0;
-
-                    if *imp2.pomodoro_continue.lock().unwrap() {
-                        let pomodoro_start_time = *start_time.borrow();
-                        let now_time = Local::now();
-                        let continue_time = now_time - pomodoro_start_time;
-                        let continue_time = continue_time.num_seconds() as i32;
-                        hrs = continue_time / 3600;
-                        mins = continue_time % 3600 / 60;
-                        secs = continue_time % 60;
-                        let watch_text: &str = &format!("{:02}:{:02}:{:02}", hrs, mins, secs).to_string();
-                        this.set_watch_time(watch_text);
-
-                        if settings_manager::get_bool("inclusive-total") {
-                            imp2.history_box.set_todays_stored_secs(continue_time);
-                        }
-
-                        *imp2.pomodoro_continue.lock().unwrap() = false;
-                    } else {
+                        *imp2.running.lock().unwrap() = true;
                         *start_time.borrow_mut() = Local::now();
-                    }
+                        let timer_start = *start_time.borrow();
+                        imp2.task_input.set_sensitive(false);
+                        let duration = Duration::new(1, 0);
+                        timeout_add_local(
+                            duration,
+                            glib::clone!(
+                                #[strong(rename_to = this_clone)]
+                                this,
+                                move || {
+                                    let imp3 = imp::FurtheranceWindow::from_obj(&this_clone);
+                                    if *imp3.running.lock().unwrap() {
+                                        secs -= 1;
+                                        if secs < 0 {
+                                            secs = 59;
+                                            mins -= 1;
+                                            if mins < 0 {
+                                                mins = 59;
+                                                hrs -= 1;
+                                            }
+                                        }
+                                        let watch_text: &str =
+                                            &format!("{:02}:{:02}:{:02}", hrs, mins, secs)
+                                                .to_string();
+                                        this_clone.set_watch_time(watch_text);
 
-                    *imp2.running.lock().unwrap() = true;
-                    imp2.task_input.set_sensitive(false);
-                    let autosave_start = *start_time.borrow();
-                    let duration = Duration::new(1,0);
-                    timeout_add_local(duration, glib::clone!(#[strong(rename_to = this_clone)] this, move || {
-                        let imp3 = imp::FurtheranceWindow::from_obj(&this_clone);
-                        if *imp3.running.lock().unwrap() {
-                            secs += 1;
-                            if secs > 59 {
-                                secs = 0;
-                                mins += 1;
-                                if mins > 59 {
-                                    mins = 0;
-                                    hrs += 1;
+                                        if settings_manager::get_bool("inclusive-total") {
+                                            secs_only += 1;
+                                            imp3.history_box.set_todays_time(secs_only);
+                                        }
+                                    }
+                                    if settings_manager::get_bool("autosave") {
+                                        let autosave_mins =
+                                            settings_manager::get_int("autosave-time");
+                                        let total_elapsed = (pomodoro_time * 60)
+                                            - (hrs * 3600)
+                                            - (mins * 60)
+                                            - secs;
+                                        if total_elapsed % (autosave_mins * 60) == 0 {
+                                            this_clone.write_autosave(timer_start);
+                                        }
+                                    }
+                                    if hrs == 0 && mins == 0 && secs == 0 {
+                                        let timer_stop = Local::now();
+                                        *imp3.running.lock().unwrap() = false;
+                                        this_clone.pomodoro_over(timer_start, timer_stop);
+                                    }
+                                    if *imp3.running.lock().unwrap() {
+                                        ControlFlow::Continue
+                                    } else {
+                                        ControlFlow::Break
+                                    }
                                 }
-                            }
-                            let watch_text: &str = &format!("{:02}:{:02}:{:02}", hrs, mins, secs).to_string();
-                            this_clone.set_watch_time(watch_text);
+                            ),
+                        );
+                    } else {
+                        let mut secs: i32 = 0;
+                        let mut secs_only: i32 = 0;
+                        let mut mins: i32 = 0;
+                        let mut hrs: i32 = 0;
+
+                        if *imp2.pomodoro_continue.lock().unwrap() {
+                            let pomodoro_start_time = *start_time.borrow();
+                            let now_time = Local::now();
+                            let continue_time = now_time - pomodoro_start_time;
+                            let continue_time = continue_time.num_seconds() as i32;
+                            hrs = continue_time / 3600;
+                            mins = continue_time % 3600 / 60;
+                            secs = continue_time % 60;
+                            let watch_text: &str =
+                                &format!("{:02}:{:02}:{:02}", hrs, mins, secs).to_string();
+                            this.set_watch_time(watch_text);
 
                             if settings_manager::get_bool("inclusive-total") {
-                                secs_only +=1;
-                                imp3.history_box.set_todays_time(secs_only);
+                                imp2.history_box.set_todays_stored_secs(continue_time);
                             }
 
-                            if settings_manager::get_bool("autosave") {
-                                let autosave_mins = settings_manager::get_int("autosave-time");
-                                let total_elapsed = (hrs * 3600) + (mins * 60) + secs;
-                                if total_elapsed % (autosave_mins * 60) == 0 {
-                                    this_clone.write_autosave(autosave_start);
+                            *imp2.pomodoro_continue.lock().unwrap() = false;
+                        } else {
+                            *start_time.borrow_mut() = Local::now();
+                        }
+
+                        *imp2.running.lock().unwrap() = true;
+                        imp2.task_input.set_sensitive(false);
+                        let autosave_start = *start_time.borrow();
+                        let duration = Duration::new(1, 0);
+                        timeout_add_local(
+                            duration,
+                            glib::clone!(
+                                #[strong(rename_to = this_clone)]
+                                this,
+                                move || {
+                                    let imp3 = imp::FurtheranceWindow::from_obj(&this_clone);
+                                    if *imp3.running.lock().unwrap() {
+                                        secs += 1;
+                                        if secs > 59 {
+                                            secs = 0;
+                                            mins += 1;
+                                            if mins > 59 {
+                                                mins = 0;
+                                                hrs += 1;
+                                            }
+                                        }
+                                        let watch_text: &str =
+                                            &format!("{:02}:{:02}:{:02}", hrs, mins, secs)
+                                                .to_string();
+                                        this_clone.set_watch_time(watch_text);
+
+                                        if settings_manager::get_bool("inclusive-total") {
+                                            secs_only += 1;
+                                            imp3.history_box.set_todays_time(secs_only);
+                                        }
+
+                                        if settings_manager::get_bool("autosave") {
+                                            let autosave_mins =
+                                                settings_manager::get_int("autosave-time");
+                                            let total_elapsed = (hrs * 3600) + (mins * 60) + secs;
+                                            if total_elapsed % (autosave_mins * 60) == 0 {
+                                                this_clone.write_autosave(autosave_start);
+                                            }
+                                        }
+                                    }
+                                    if *imp3.running.lock().unwrap() {
+                                        ControlFlow::Continue
+                                    } else {
+                                        ControlFlow::Break
+                                    }
+                                }
+                            ),
+                        );
+                    }
+                    button.set_icon_name("media-playback-stop-symbolic");
+                } else {
+                    *stop_time.borrow_mut() = Local::now();
+                    *imp2.running.lock().unwrap() = false;
+                    button.set_icon_name("media-playback-start-symbolic");
+                    this.refresh_timer();
+                    imp2.task_input.set_sensitive(true);
+
+                    // Re-add auto-complete
+                    if settings_manager::get_bool("autocomplete") {
+                        imp2.task_input
+                            .set_completion(Some(&FurtheranceWindow::create_autocomplete()));
+                    }
+
+                    this.save_task(*start_time.borrow(), *stop_time.borrow());
+                    FurtheranceWindow::delete_autosave();
+                }
+            }
+        ));
+
+        imp.add_task.connect_clicked(glib::clone!(
+            #[weak(rename_to = this)]
+            self,
+            move |_| {
+                let dialog = gtk::MessageDialog::new(
+                    Some(&this),
+                    gtk::DialogFlags::MODAL,
+                    gtk::MessageType::Question,
+                    gtk::ButtonsType::None,
+                    &format!(
+                        "<span size='x-large' weight='bold'>{}</span>",
+                        &gettext("New Task")
+                    ),
+                );
+                dialog.set_use_markup(true);
+                dialog.add_buttons(&[
+                    (&gettext("Cancel"), gtk::ResponseType::Cancel),
+                    (&gettext("Add"), gtk::ResponseType::Ok),
+                ]);
+
+                let message_area = dialog.message_area().downcast::<gtk::Box>().unwrap();
+                let vert_box = gtk::Box::new(gtk::Orientation::Vertical, 5);
+                let task_name_edit = gtk::Entry::new();
+                task_name_edit.set_placeholder_text(Some(&gettext("Task Name")));
+                let task_tags_edit = gtk::Entry::new();
+                let tags_placeholder = format!("#{}", &gettext("tags"));
+                task_tags_edit.set_placeholder_text(Some(&tags_placeholder));
+
+                let labels_box = gtk::Box::new(gtk::Orientation::Horizontal, 5);
+                labels_box.set_homogeneous(true);
+                let start_label = gtk::Label::new(Some(&gettext("Start")));
+                start_label.add_css_class("title-4");
+                let stop_label = gtk::Label::new(Some(&gettext("Stop")));
+                stop_label.add_css_class("title-4");
+                let times_box = gtk::Box::new(gtk::Orientation::Horizontal, 5);
+                times_box.set_homogeneous(true);
+
+                let stop_time = Local::now();
+                let start_time = stop_time - ChronDur::seconds(1);
+
+                let time_formatter = "%F %H:%M:%S";
+                let time_formatter_no_secs = "%F %H:%M";
+
+                let mut start_time_w_year = start_time.format(time_formatter).to_string();
+                if !settings_manager::get_bool("show-seconds") {
+                    start_time_w_year = start_time.format(time_formatter_no_secs).to_string();
+                }
+                let mut stop_time_w_year = stop_time.format(time_formatter).to_string();
+                if !settings_manager::get_bool("show-seconds") {
+                    stop_time_w_year = stop_time.format(time_formatter_no_secs).to_string();
+                }
+                let start_time_edit = gtk::Entry::new();
+                start_time_edit.set_text(&start_time_w_year);
+                let stop_time_edit = gtk::Entry::new();
+                stop_time_edit.set_text(&stop_time_w_year);
+
+                let instructions =
+                    gtk::Label::new(Some(&gettext("*Use the format YYYY-MM-DD HH:MM:SS")));
+                if !settings_manager::get_bool("show-seconds") {
+                    instructions.set_text(&gettext("*Use the format YYYY-MM-DD HH:MM"));
+                }
+                instructions.set_visible(false);
+                instructions.add_css_class("error_message");
+
+                let time_error = gtk::Label::new(Some(&gettext(
+                    "*Start time cannot be later than stop time.",
+                )));
+                time_error.set_visible(false);
+                time_error.add_css_class("error_message");
+
+                let future_error =
+                    gtk::Label::new(Some(&gettext("*Time cannot be in the future.")));
+                future_error.set_visible(false);
+                future_error.add_css_class("error_message");
+
+                let name_error = gtk::Label::new(Some(&gettext("*Task name cannot be blank.")));
+                name_error.set_visible(false);
+                name_error.add_css_class("error_message");
+
+                vert_box.append(&task_name_edit);
+                vert_box.append(&task_tags_edit);
+                labels_box.append(&start_label);
+                labels_box.append(&stop_label);
+                times_box.append(&start_time_edit);
+                times_box.append(&stop_time_edit);
+                vert_box.append(&labels_box);
+                vert_box.append(&times_box);
+                vert_box.append(&instructions);
+                vert_box.append(&time_error);
+                vert_box.append(&future_error);
+                vert_box.append(&name_error);
+                message_area.append(&vert_box);
+
+                dialog.connect_response(glib::clone!(
+                    #[strong]
+                    dialog,
+                    move |_, resp| {
+                        if resp == gtk::ResponseType::Ok {
+                            instructions.set_visible(false);
+                            time_error.set_visible(false);
+                            future_error.set_visible(false);
+                            name_error.set_visible(false);
+                            let mut do_not_close = false;
+                            let mut new_start_time_local = Local::now();
+                            let mut new_stop_time_local = Local::now();
+
+                            // Task Name
+                            if task_name_edit.text().trim().is_empty() {
+                                name_error.set_visible(true);
+                                do_not_close = true;
+                            }
+
+                            // Start Time
+                            let new_start_time_str = start_time_edit.text();
+                            let new_start_time: Result<NaiveDateTime, ParseError>;
+                            if settings_manager::get_bool("show-seconds") {
+                                new_start_time = NaiveDateTime::parse_from_str(
+                                    &new_start_time_str,
+                                    time_formatter,
+                                );
+                            } else {
+                                new_start_time = NaiveDateTime::parse_from_str(
+                                    &new_start_time_str,
+                                    time_formatter_no_secs,
+                                );
+                            }
+                            if let Err(_) = new_start_time {
+                                instructions.set_visible(true);
+                                do_not_close = true;
+                            } else {
+                                new_start_time_local =
+                                    Local.from_local_datetime(&new_start_time.unwrap()).unwrap();
+                                if (Local::now() - new_start_time_local).num_seconds() < 0 {
+                                    future_error.set_visible(true);
+                                    do_not_close = true;
                                 }
                             }
-                        }
-                        if *imp3.running.lock().unwrap() {
-                            ControlFlow::Continue
-                        } else {
-                            ControlFlow::Break
-                        }
-                    }));
-                }
-                button.set_icon_name("media-playback-stop-symbolic");
-            } else {
-                *stop_time.borrow_mut() = Local::now();
-                *imp2.running.lock().unwrap() = false;
-                button.set_icon_name("media-playback-start-symbolic");
-                this.refresh_timer();
-                imp2.task_input.set_sensitive(true);
 
-                // Re-add auto-complete
-                if settings_manager::get_bool("autocomplete") {
-                    imp2.task_input.set_completion(Some(&FurtheranceWindow::create_autocomplete()));
-                }
+                            // Stop Time
+                            let new_stop_time_str = stop_time_edit.text();
+                            let new_stop_time: Result<NaiveDateTime, ParseError>;
+                            if settings_manager::get_bool("show-seconds") {
+                                new_stop_time = NaiveDateTime::parse_from_str(
+                                    &new_stop_time_str,
+                                    time_formatter,
+                                );
+                            } else {
+                                new_stop_time = NaiveDateTime::parse_from_str(
+                                    &new_stop_time_str,
+                                    time_formatter_no_secs,
+                                );
+                            }
+                            if let Err(_) = new_stop_time {
+                                instructions.set_visible(true);
+                                do_not_close = true;
+                            } else {
+                                new_stop_time_local =
+                                    Local.from_local_datetime(&new_stop_time.unwrap()).unwrap();
+                                if (Local::now() - new_stop_time_local).num_seconds() < 0 {
+                                    future_error.set_visible(true);
+                                    do_not_close = true;
+                                }
+                            }
 
-                this.save_task(*start_time.borrow(), *stop_time.borrow());
-                FurtheranceWindow::delete_autosave();
-            }
-        }));
+                            // Start time can't be later than stop time
+                            if !do_not_close
+                                && (new_stop_time_local - new_start_time_local).num_seconds() < 0
+                            {
+                                time_error.set_visible(true);
+                                do_not_close = true;
+                            }
 
-        imp.add_task.connect_clicked(glib::clone!(#[weak(rename_to = this)] self, move |_| {
-            let dialog = gtk::MessageDialog::new(
-                Some(&this),
-                gtk::DialogFlags::MODAL,
-                gtk::MessageType::Question,
-                gtk::ButtonsType::None,
-                &format!("<span size='x-large' weight='bold'>{}</span>", &gettext("New Task")),
-            );
-            dialog.set_use_markup(true);
-            dialog.add_buttons(&[
-                (&gettext("Cancel"), gtk::ResponseType::Cancel),
-                (&gettext("Add"), gtk::ResponseType::Ok)
-            ]);
+                            // Tags
+                            let mut new_tag_list = "".to_string();
+                            if !task_tags_edit.text().trim().is_empty() {
+                                let new_tags = task_tags_edit.text();
+                                let mut split_tags: Vec<&str> =
+                                    new_tags.trim().split("#").collect();
+                                split_tags = split_tags.iter().map(|x| x.trim()).collect();
+                                // Don't allow empty tags
+                                split_tags.retain(|&x| !x.trim().is_empty());
+                                // Handle duplicate tags before they are saved
+                                split_tags = split_tags.into_iter().unique().collect();
+                                // Lowercase tags
+                                let lower_tags: Vec<String> =
+                                    split_tags.iter().map(|x| x.to_lowercase()).collect();
+                                new_tag_list = lower_tags.join(" #");
+                            }
 
-            let message_area = dialog.message_area().downcast::<gtk::Box>().unwrap();
-            let vert_box = gtk::Box::new(gtk::Orientation::Vertical, 5);
-            let task_name_edit = gtk::Entry::new();
-            task_name_edit.set_placeholder_text(Some(&gettext("Task Name")));
-            let task_tags_edit = gtk::Entry::new();
-            let tags_placeholder = format!("#{}", &gettext("tags"));
-            task_tags_edit.set_placeholder_text(Some(&tags_placeholder));
-
-            let labels_box = gtk::Box::new(gtk::Orientation::Horizontal, 5);
-            labels_box.set_homogeneous(true);
-            let start_label = gtk::Label::new(Some(&gettext("Start")));
-            start_label.add_css_class("title-4");
-            let stop_label = gtk::Label::new(Some(&gettext("Stop")));
-            stop_label.add_css_class("title-4");
-            let times_box = gtk::Box::new(gtk::Orientation::Horizontal, 5);
-            times_box.set_homogeneous(true);
-
-            let stop_time = Local::now();
-            let start_time = stop_time - ChronDur::seconds(1);
-
-            let time_formatter = "%F %H:%M:%S";
-            let time_formatter_no_secs = "%F %H:%M";
-
-            let mut start_time_w_year = start_time.format(time_formatter).to_string();
-            if !settings_manager::get_bool("show-seconds") {
-                start_time_w_year = start_time.format(time_formatter_no_secs).to_string();
-            }
-            let mut stop_time_w_year = stop_time.format(time_formatter).to_string();
-            if !settings_manager::get_bool("show-seconds") {
-                stop_time_w_year = stop_time.format(time_formatter_no_secs).to_string();
-            }
-            let start_time_edit = gtk::Entry::new();
-            start_time_edit.set_text(&start_time_w_year);
-            let stop_time_edit = gtk::Entry::new();
-            stop_time_edit.set_text(&stop_time_w_year);
-
-            let instructions = gtk::Label::new(Some(
-                &gettext("*Use the format YYYY-MM-DD HH:MM:SS")));
-            if !settings_manager::get_bool("show-seconds") {
-                instructions.set_text(&gettext("*Use the format YYYY-MM-DD HH:MM"));
-            }
-            instructions.set_visible(false);
-            instructions.add_css_class("error_message");
-
-            let time_error = gtk::Label::new(Some(
-                &gettext("*Start time cannot be later than stop time.")));
-            time_error.set_visible(false);
-            time_error.add_css_class("error_message");
-
-            let future_error = gtk::Label::new(Some(
-                &gettext("*Time cannot be in the future.")));
-            future_error.set_visible(false);
-            future_error.add_css_class("error_message");
-
-            let name_error = gtk::Label::new(Some(
-                &gettext("*Task name cannot be blank.")));
-            name_error.set_visible(false);
-            name_error.add_css_class("error_message");
-
-            vert_box.append(&task_name_edit);
-            vert_box.append(&task_tags_edit);
-            labels_box.append(&start_label);
-            labels_box.append(&stop_label);
-            times_box.append(&start_time_edit);
-            times_box.append(&stop_time_edit);
-            vert_box.append(&labels_box);
-            vert_box.append(&times_box);
-            vert_box.append(&instructions);
-            vert_box.append(&time_error);
-            vert_box.append(&future_error);
-            vert_box.append(&name_error);
-            message_area.append(&vert_box);
-
-            dialog.connect_response(glib::clone!(#[strong] dialog, move |_ , resp| {
-                if resp == gtk::ResponseType::Ok {
-                    instructions.set_visible(false);
-                    time_error.set_visible(false);
-                    future_error.set_visible(false);
-                    name_error.set_visible(false);
-                    let mut do_not_close = false;
-                    let mut new_start_time_local = Local::now();
-                    let mut new_stop_time_local = Local::now();
-
-                    // Task Name
-                    if task_name_edit.text().trim().is_empty() {
-                        name_error.set_visible(true);
-                        do_not_close = true;
-                    }
-
-                    // Start Time
-                    let new_start_time_str = start_time_edit.text();
-                    let new_start_time: Result<NaiveDateTime, ParseError>;
-                    if settings_manager::get_bool("show-seconds") {
-                        new_start_time = NaiveDateTime::parse_from_str(
-                                            &new_start_time_str,
-                                            time_formatter);
-                    } else {
-                        new_start_time = NaiveDateTime::parse_from_str(
-                                                &new_start_time_str,
-                                                time_formatter_no_secs);
-                    }
-                    if let Err(_) = new_start_time {
-                        instructions.set_visible(true);
-                        do_not_close = true;
-                    } else {
-                        new_start_time_local = Local.from_local_datetime(&new_start_time.unwrap()).unwrap();
-                        if (Local::now() - new_start_time_local).num_seconds() < 0 {
-                            future_error.set_visible(true);
-                            do_not_close = true;
+                            if !do_not_close {
+                                let _ = database::db_write(
+                                    task_name_edit.text().trim(),
+                                    new_start_time_local,
+                                    new_stop_time_local,
+                                    new_tag_list,
+                                );
+                                this.reset_history_box();
+                                dialog.close();
+                            }
+                        } else if resp == gtk::ResponseType::Cancel {
+                            dialog.close();
                         }
                     }
+                ));
 
-                    // Stop Time
-                    let new_stop_time_str = stop_time_edit.text();
-                    let new_stop_time: Result<NaiveDateTime, ParseError>;
-                    if settings_manager::get_bool("show-seconds") {
-                        new_stop_time = NaiveDateTime::parse_from_str(
-                                            &new_stop_time_str,
-                                            time_formatter);
-                    } else {
-                        new_stop_time = NaiveDateTime::parse_from_str(
-                                                &new_stop_time_str,
-                                                time_formatter_no_secs);
-                    }
-                    if let Err(_) = new_stop_time {
-                        instructions.set_visible(true);
-                        do_not_close = true;
-                    } else {
-                        new_stop_time_local = Local.from_local_datetime(&new_stop_time.unwrap()).unwrap();
-                        if (Local::now() - new_stop_time_local).num_seconds() < 0 {
-                            future_error.set_visible(true);
-                            do_not_close = true;
-                        }
-                    }
-
-                    // Start time can't be later than stop time
-                    if !do_not_close && (new_stop_time_local - new_start_time_local).num_seconds() < 0 {
-                        time_error.set_visible(true);
-                        do_not_close = true;
-                    }
-
-                    // Tags
-                    let mut new_tag_list = "".to_string();
-                    if !task_tags_edit.text().trim().is_empty() {
-                        let new_tags = task_tags_edit.text();
-                        let mut split_tags: Vec<&str> = new_tags.trim().split("#").collect();
-                        split_tags = split_tags.iter().map(|x| x.trim()).collect();
-                        // Don't allow empty tags
-                        split_tags.retain(|&x| !x.trim().is_empty());
-                        // Handle duplicate tags before they are saved
-                        split_tags = split_tags.into_iter().unique().collect();
-                        // Lowercase tags
-                        let lower_tags: Vec<String> = split_tags.iter().map(|x| x.to_lowercase()).collect();
-                        new_tag_list = lower_tags.join(" #");
-                    }
-
-                    if !do_not_close {
-                        let _ = database::db_write(task_name_edit.text().trim(),
-                                                    new_start_time_local,
-                                                    new_stop_time_local,
-                                                    new_tag_list);
-                        this.reset_history_box();
-                        dialog.close();
-                    }
-
-                } else if resp == gtk::ResponseType::Cancel {
-                    dialog.close();
-                }
-            }));
-
-            dialog.show();
-        }));
+                dialog.show();
+            }
+        ));
     }
 
     fn setup_settings(&self) {
@@ -670,18 +732,23 @@ impl FurtheranceWindow {
         dialog.set_secondary_text(Some(&idle_time_msg));
 
         dialog.connect_response(glib::clone!(
-            #[weak(rename_to = this)] self,
-            #[strong] dialog,
-            #[strong(rename_to = start_button)] imp.start_button, move |_, resp| {
-            if resp == gtk::ResponseType::Reject {
-                this.set_subtract_idle(true);
-                start_button.emit_clicked();
-                dialog.close();
-            } else if resp == gtk::ResponseType::Accept {
-                this.reset_idle();
-                dialog.close();
+            #[weak(rename_to = this)]
+            self,
+            #[strong]
+            dialog,
+            #[strong(rename_to = start_button)]
+            imp.start_button,
+            move |_, resp| {
+                if resp == gtk::ResponseType::Reject {
+                    this.set_subtract_idle(true);
+                    start_button.emit_clicked();
+                    dialog.close();
+                } else if resp == gtk::ResponseType::Accept {
+                    this.reset_idle();
+                    dialog.close();
+                }
             }
-        }));
+        ));
 
         *imp.idle_dialog.lock().unwrap() = dialog.clone();
         let app = FurtheranceApplication::default();
@@ -709,23 +776,28 @@ impl FurtheranceWindow {
         let app = FurtheranceApplication::default();
         app.system_pomodoro_notification(dialog.clone());
         dialog.connect_response(glib::clone!(
-            #[weak(rename_to = this)] self,
-            #[strong] dialog, move |_, resp| {
-            let imp = imp::FurtheranceWindow::from_obj(&this);
-            if resp == gtk::ResponseType::Reject {
-                imp.start_button.set_icon_name("media-playback-start-symbolic");
-                this.refresh_timer();
-                imp.task_input.set_sensitive(true);
-                this.save_task(timer_start, timer_stop);
-                this.reset_idle();
-                dialog.close();
-            } else if resp == gtk::ResponseType::Accept {
-                *imp.pomodoro_continue.lock().unwrap() = true;
-                this.reset_idle();
-                imp.start_button.emit_clicked();
-                dialog.close();
+            #[weak(rename_to = this)]
+            self,
+            #[strong]
+            dialog,
+            move |_, resp| {
+                let imp = imp::FurtheranceWindow::from_obj(&this);
+                if resp == gtk::ResponseType::Reject {
+                    imp.start_button
+                        .set_icon_name("media-playback-start-symbolic");
+                    this.refresh_timer();
+                    imp.task_input.set_sensitive(true);
+                    this.save_task(timer_start, timer_stop);
+                    this.reset_idle();
+                    dialog.close();
+                } else if resp == gtk::ResponseType::Accept {
+                    *imp.pomodoro_continue.lock().unwrap() = true;
+                    this.reset_idle();
+                    imp.start_button.emit_clicked();
+                    dialog.close();
+                }
             }
-        }));
+        ));
 
         let imp2 = imp::FurtheranceWindow::from_obj(self);
         imp2.idle_dialog.lock().unwrap().close();
@@ -804,13 +876,17 @@ impl FurtheranceWindow {
             )));
 
             dialog.connect_response(glib::clone!(
-                #[weak(rename_to = this)] self,
-                #[strong] dialog, move |_, resp| {
-                if resp == gtk::ResponseType::Ok {
-                    this.reset_history_box();
-                    dialog.close();
+                #[weak(rename_to = this)]
+                self,
+                #[strong]
+                dialog,
+                move |_, resp| {
+                    if resp == gtk::ResponseType::Ok {
+                        this.reset_history_box();
+                        dialog.close();
+                    }
                 }
-            }));
+            ));
 
             dialog.show();
             FurtheranceWindow::delete_autosave();
@@ -952,15 +1028,25 @@ impl FurtheranceWindow {
 
         filechooser.set_current_name("data.csv");
 
-        filechooser_button.connect_clicked(
-            glib::clone!(#[weak(rename_to = window)] self, #[weak] filechooser, #[weak] dialog, move |_| {
+        filechooser_button.connect_clicked(glib::clone!(
+            #[weak(rename_to = window)]
+            self,
+            #[weak]
+            filechooser,
+            #[weak]
+            dialog,
+            move |_| {
                 dialog.hide();
                 filechooser.show();
-            }),
-        );
+            }
+        ));
 
-        filechooser.connect_response(
-            glib::clone!(#[weak] dialog, #[weak] chosenfile_label, move |filechooser, response| {
+        filechooser.connect_response(glib::clone!(
+            #[weak]
+            dialog,
+            #[weak]
+            chosenfile_label,
+            move |filechooser, response| {
                 if response == gtk::ResponseType::Accept {
                     if let Some(path) = filechooser.file().and_then(|file| file.path()) {
                         chosenfile_label.set_label(&path.to_string_lossy());
@@ -970,31 +1056,53 @@ impl FurtheranceWindow {
                 }
 
                 dialog.show();
-            }),
-        );
-
-        dialog.connect_response(glib::clone!(#[weak(rename_to = window)] self, #[weak] filechooser, #[weak] tasksort_row, #[weak] sortorder_row, move |dialog, response| {
-            match response {
-                gtk::ResponseType::Apply => {
-                    let sort = TaskSort::try_from(tasksort_row.selected()).unwrap_or_default();
-                    let order = SortOrder::try_from(sortorder_row.selected()).unwrap_or_default();
-
-                    if let Some(file) = filechooser.file() {
-                        glib::MainContext::default().spawn_local(glib::clone!(#[strong] window, #[strong] file, async move {
-                            if let Err(e) = FurtheranceWindow::export_csv_to_file(sort, order, &file).await {
-                                log::error!("replace file {:?} failed, Err {}", file, e);
-                                window.display_toast(&gettext("Exporting as CSV failed."));
-                            } else {
-                                window.display_toast(&gettext("Exported as CSV successfully."));
-                            };
-                        }));
-                    }
-                }
-                _ => {}
             }
+        ));
 
-            dialog.close();
-        }));
+        dialog.connect_response(glib::clone!(
+            #[weak(rename_to = window)]
+            self,
+            #[weak]
+            filechooser,
+            #[weak]
+            tasksort_row,
+            #[weak]
+            sortorder_row,
+            move |dialog, response| {
+                match response {
+                    gtk::ResponseType::Apply => {
+                        let sort = TaskSort::try_from(tasksort_row.selected()).unwrap_or_default();
+                        let order =
+                            SortOrder::try_from(sortorder_row.selected()).unwrap_or_default();
+
+                        if let Some(file) = filechooser.file() {
+                            glib::MainContext::default().spawn_local(glib::clone!(
+                                #[strong]
+                                window,
+                                #[strong]
+                                file,
+                                async move {
+                                    if let Err(e) =
+                                        FurtheranceWindow::export_csv_to_file(sort, order, &file)
+                                            .await
+                                    {
+                                        log::error!("replace file {:?} failed, Err {}", file, e);
+                                        window.display_toast(&gettext("Exporting as CSV failed."));
+                                    } else {
+                                        window.display_toast(&gettext(
+                                            "Exported as CSV successfully.",
+                                        ));
+                                    };
+                                }
+                            ));
+                        }
+                    }
+                    _ => {}
+                }
+
+                dialog.close();
+            }
+        ));
 
         *self.imp().filechooser.borrow_mut() = filechooser;
 

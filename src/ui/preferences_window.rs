@@ -250,8 +250,10 @@ impl FurPreferencesWindow {
             window.reset_history_box();
         });
 
-        imp.database_browse_btn
-            .connect_clicked(glib::clone!(#[weak(rename_to = this)] self, move |_| {
+        imp.database_browse_btn.connect_clicked(glib::clone!(
+            #[weak(rename_to = this)]
+            self,
+            move |_| {
                 let window = FurtheranceApplication::default().active_window().unwrap();
                 let dialog = gtk::FileChooserDialog::new(
                     Some(&gettext("Backup Database")),
@@ -260,7 +262,7 @@ impl FurPreferencesWindow {
                     &[
                         (&gettext("Cancel"), gtk::ResponseType::Reject),
                         (&gettext("Save"), gtk::ResponseType::Accept),
-                    ]
+                    ],
                 );
                 dialog.set_modal(true);
 
@@ -271,8 +273,12 @@ impl FurPreferencesWindow {
                 dialog.add_filter(&filter);
                 dialog.set_current_name("furtherance.db");
 
-                dialog.connect_response(
-                    glib::clone!(#[strong] dialog, #[weak(rename_to = this2)] this, move |filechooser, resp| {
+                dialog.connect_response(glib::clone!(
+                    #[strong]
+                    dialog,
+                    #[weak(rename_to = this2)]
+                    this,
+                    move |filechooser, resp| {
                         if resp == gtk::ResponseType::Accept {
                             if let Some(path) = filechooser.file().and_then(|file| file.path()) {
                                 let path = &path.to_string_lossy();
@@ -291,11 +297,11 @@ impl FurPreferencesWindow {
                         } else {
                             dialog.close();
                         }
-                    }),
-                );
+                    }
+                ));
 
                 dialog.show();
-
-            }));
+            }
+        ));
     }
 }

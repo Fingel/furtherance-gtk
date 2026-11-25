@@ -92,11 +92,15 @@ impl FurTaskRow {
     fn setup_signals(&self) {
         let open_details_action = gio::SimpleAction::new("open-details", None);
 
-        open_details_action.connect_activate(glib::clone!(#[strong(rename_to = this)] self, move |_, _| {
-            let dialog = FurTaskDetails::new();
-            dialog.setup_widgets(this.get_tasks());
-            dialog.show();
-        }));
+        open_details_action.connect_activate(glib::clone!(
+            #[strong(rename_to = this)]
+            self,
+            move |_, _| {
+                let dialog = FurTaskDetails::new();
+                dialog.setup_widgets(this.get_tasks());
+                dialog.show();
+            }
+        ));
 
         let actions = gio::SimpleActionGroup::new();
         self.insert_action_group("task-row", Some(&actions));
@@ -124,19 +128,26 @@ impl FurTaskRow {
         // Create right-click gesture
         let gesture = gtk::GestureClick::new();
         gesture.set_button(gtk::gdk::ffi::GDK_BUTTON_SECONDARY as u32);
-        gesture.connect_pressed(glib::clone!(#[strong] task_list, move |gesture, _, _, _| {
-            gesture.set_state(gtk::EventSequenceState::Claimed);
-            let window = FurtheranceWindow::default();
-            window.duplicate_task(task_list[0].clone());
-        }));
+        gesture.connect_pressed(glib::clone!(
+            #[strong]
+            task_list,
+            move |gesture, _, _, _| {
+                gesture.set_state(gtk::EventSequenceState::Claimed);
+                let window = FurtheranceWindow::default();
+                window.duplicate_task(task_list[0].clone());
+            }
+        ));
 
         self.add_controller(gesture);
 
-        imp.restart_task_btn
-            .connect_clicked(glib::clone!(#[strong] task_list, move |_| {
+        imp.restart_task_btn.connect_clicked(glib::clone!(
+            #[strong]
+            task_list,
+            move |_| {
                 let window = FurtheranceWindow::default();
                 window.duplicate_task(task_list[0].clone());
-            }));
+            }
+        ));
 
         // Add up all durations for task of said name to create total_time
         for task in &task_list {

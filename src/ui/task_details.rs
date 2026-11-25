@@ -174,260 +174,322 @@ impl FurTaskDetails {
             imp.main_box.append(&task_box);
             imp.all_boxes.borrow_mut().push(task_box);
 
-            start.connect_clicked(glib::clone!(#[weak(rename_to = this)] self, move |_|{
-                let dialog = gtk::MessageDialog::new(
-                    Some(&this),
-                    gtk::DialogFlags::MODAL,
-                    gtk::MessageType::Question,
-                    gtk::ButtonsType::OkCancel,
-                    &format!("<span size='x-large' weight='bold'>{}</span>", &gettext("Edit Task")),
-                );
-                dialog.set_use_markup(true);
-
-                let message_area = dialog.message_area().downcast::<gtk::Box>().unwrap();
-                let vert_box = gtk::Box::new(gtk::Orientation::Vertical, 5);
-                let task_name_edit = gtk::Entry::new();
-                task_name_edit.set_text(&task.task_name);
-                let task_tags_edit = gtk::Entry::new();
-                let tags_placeholder = format!("#{}", &gettext("Tags"));
-                task_tags_edit.set_placeholder_text(Some(&tags_placeholder));
-                let mut task_tags: String = task.tags.clone();
-                if !task.tags.trim().is_empty() {
-                    task_tags = format!("#{}", task.tags);
-                    task_tags_edit.set_text(&task_tags);
-                }
-                let labels_box = gtk::Box::new(gtk::Orientation::Horizontal, 5);
-                labels_box.set_homogeneous(true);
-                let start_label = gtk::Label::new(Some(&gettext("Start")));
-                start_label.add_css_class("title-4");
-                let stop_label = gtk::Label::new(Some(&gettext("Stop")));
-                stop_label.add_css_class("title-4");
-                let times_box = gtk::Box::new(gtk::Orientation::Horizontal, 5);
-                times_box.set_homogeneous(true);
-
-                let mut start_time_w_year = start_time.format(time_formatter).to_string();
-                if !settings_manager::get_bool("show-seconds") {
-                    start_time_w_year = start_time.format(time_formatter_no_secs).to_string();
-                }
-                let mut stop_time_w_year = stop_time.format(time_formatter).to_string();
-                if !settings_manager::get_bool("show-seconds") {
-                    stop_time_w_year = stop_time.format(time_formatter_no_secs).to_string();
-                }
-                let start_time_edit = gtk::Entry::new();
-                start_time_edit.set_text(&start_time_w_year);
-                let stop_time_edit = gtk::Entry::new();
-                stop_time_edit.set_text(&stop_time_w_year);
-
-                let instructions = gtk::Label::new(Some(
-                    &gettext("*Use the format YYYY-MM-DD HH:MM:SS")));
-                if !settings_manager::get_bool("show-seconds") {
-                    instructions.set_text(&gettext("*Use the format YYYY-MM-DD HH:MM"));
-                }
-                instructions.set_visible(false);
-                instructions.add_css_class("error_message");
-
-                let time_error = gtk::Label::new(Some(
-                    &gettext("*Start time cannot be later than stop time.")));
-                time_error.set_visible(false);
-                time_error.add_css_class("error_message");
-
-                let future_error = gtk::Label::new(Some(
-                    &gettext("*Time cannot be in the future.")));
-                future_error.set_visible(false);
-                future_error.add_css_class("error_message");
-
-                let delete_task_btn = gtk::Button::new();
-                delete_task_btn.set_icon_name("user-trash-symbolic");
-                delete_task_btn.set_tooltip_text(Some(&gettext("Delete task")));
-                delete_task_btn.set_hexpand(false);
-                delete_task_btn.set_vexpand(false);
-                delete_task_btn.set_halign(gtk::Align::End);
-
-                vert_box.append(&task_name_edit);
-                vert_box.append(&task_tags_edit);
-                labels_box.append(&start_label);
-                labels_box.append(&stop_label);
-                times_box.append(&start_time_edit);
-                times_box.append(&stop_time_edit);
-                vert_box.append(&labels_box);
-                vert_box.append(&times_box);
-                vert_box.append(&instructions);
-                vert_box.append(&time_error);
-                vert_box.append(&future_error);
-                message_area.append(&delete_task_btn);
-                message_area.append(&vert_box);
-
-                delete_task_btn.connect_clicked(glib::clone!(
-                    #[strong] task, #[strong] dialog, #[weak] this, move |_| {
-
-                    let delete_confirmation = gtk::MessageDialog::with_markup(
-                        Some(&dialog),
+            start.connect_clicked(glib::clone!(
+                #[weak(rename_to = this)]
+                self,
+                move |_| {
+                    let dialog = gtk::MessageDialog::new(
+                        Some(&this),
                         gtk::DialogFlags::MODAL,
                         gtk::MessageType::Question,
                         gtk::ButtonsType::OkCancel,
-                        Some(&format!("<span size='x-large' weight='bold'>{}</span>", &gettext("Delete task?"))),
+                        &format!(
+                            "<span size='x-large' weight='bold'>{}</span>",
+                            &gettext("Edit Task")
+                        ),
                     );
-                    let delete_btn = delete_confirmation.widget_for_response(gtk::ResponseType::Ok).unwrap();
-                    delete_btn.add_css_class("destructive-action");
+                    dialog.set_use_markup(true);
 
-                    delete_confirmation.connect_response(glib::clone!(
-                        #[strong] dialog,
-                        #[strong] delete_confirmation, move |_, resp| {
-                        if resp == gtk::ResponseType::Ok {
-                            let _ = database::delete_by_id(task.id);
-                            if task_group_len == 1 {
-                                delete_confirmation.close();
-                                dialog.close();
-                                this.close();
-                                let window = FurtheranceWindow::default();
-                                window.reset_history_box();
-                            } else {
-                                delete_confirmation.close();
-                                this.clear_task_list();
-                                dialog.close();
-                            }
-                        } else {
-                            delete_confirmation.close();
-                        }
-                    }));
-
-                    if settings_manager::get_bool("delete-confirmation") {
-                        delete_confirmation.show();
-                    } else {
-                        delete_confirmation.response(gtk::ResponseType::Ok);
+                    let message_area = dialog.message_area().downcast::<gtk::Box>().unwrap();
+                    let vert_box = gtk::Box::new(gtk::Orientation::Vertical, 5);
+                    let task_name_edit = gtk::Entry::new();
+                    task_name_edit.set_text(&task.task_name);
+                    let task_tags_edit = gtk::Entry::new();
+                    let tags_placeholder = format!("#{}", &gettext("Tags"));
+                    task_tags_edit.set_placeholder_text(Some(&tags_placeholder));
+                    let mut task_tags: String = task.tags.clone();
+                    if !task.tags.trim().is_empty() {
+                        task_tags = format!("#{}", task.tags);
+                        task_tags_edit.set_text(&task_tags);
                     }
-                }));
+                    let labels_box = gtk::Box::new(gtk::Orientation::Horizontal, 5);
+                    labels_box.set_homogeneous(true);
+                    let start_label = gtk::Label::new(Some(&gettext("Start")));
+                    start_label.add_css_class("title-4");
+                    let stop_label = gtk::Label::new(Some(&gettext("Stop")));
+                    stop_label.add_css_class("title-4");
+                    let times_box = gtk::Box::new(gtk::Orientation::Horizontal, 5);
+                    times_box.set_homogeneous(true);
 
+                    let mut start_time_w_year = start_time.format(time_formatter).to_string();
+                    if !settings_manager::get_bool("show-seconds") {
+                        start_time_w_year = start_time.format(time_formatter_no_secs).to_string();
+                    }
+                    let mut stop_time_w_year = stop_time.format(time_formatter).to_string();
+                    if !settings_manager::get_bool("show-seconds") {
+                        stop_time_w_year = stop_time.format(time_formatter_no_secs).to_string();
+                    }
+                    let start_time_edit = gtk::Entry::new();
+                    start_time_edit.set_text(&start_time_w_year);
+                    let stop_time_edit = gtk::Entry::new();
+                    stop_time_edit.set_text(&stop_time_w_year);
 
-                dialog.connect_response(
-                    glib::clone!(#[strong] dialog,
-                        #[strong(rename_to = name)] task.task_name,
-                        #[strong(rename_to = start_time)] task.start_time,
-                        #[strong(rename_to = stop_time)] task.stop_time,
-                        #[strong(rename_to = tags)] task.tags, move |_ , resp| {
-                        if resp == gtk::ResponseType::Ok {
-                            instructions.set_visible(false);
-                            time_error.set_visible(false);
-                            future_error.set_visible(false);
-                            let mut start_successful = false;
-                            let mut stop_successful = false;
-                            let mut do_not_close = false;
-                            let mut new_start_time_edited: String = "".to_string();
-                            let mut new_start_time_local = Local::now();
-                            let new_stop_time_edited: String;
-                            if start_time_edit.text() != start_time_w_year {
-                                let new_start_time_str = start_time_edit.text();
-                                let new_start_time: Result<NaiveDateTime, ParseError>;
-                                if settings_manager::get_bool("show-seconds") {
-                                    new_start_time = NaiveDateTime::parse_from_str(
-                                                        &new_start_time_str,
-                                                        time_formatter);
-                                } else {
-                                    new_start_time = NaiveDateTime::parse_from_str(
-                                                            &new_start_time_str,
-                                                            time_formatter_no_secs);
-                                }
+                    let instructions =
+                        gtk::Label::new(Some(&gettext("*Use the format YYYY-MM-DD HH:MM:SS")));
+                    if !settings_manager::get_bool("show-seconds") {
+                        instructions.set_text(&gettext("*Use the format YYYY-MM-DD HH:MM"));
+                    }
+                    instructions.set_visible(false);
+                    instructions.add_css_class("error_message");
 
-                                if let Err(_) = new_start_time {
-                                    instructions.set_visible(true);
-                                    do_not_close = true;
-                                } else if (Local::now() - Local.from_local_datetime(&new_start_time.unwrap()).unwrap()).num_seconds() < 0 {
-                                    future_error.set_visible(true);
-                                    do_not_close = true;
-                                }else {
-                                    new_start_time_local = Local.from_local_datetime(&new_start_time.unwrap()).unwrap();
-                                    new_start_time_edited = new_start_time_local.to_rfc3339();
-                                    start_successful = true;
-                                }
-                            }
-                            if stop_time_edit.text() != stop_time_w_year {
-                                let new_stop_time_str = stop_time_edit.text();
-                                let new_stop_time: Result<NaiveDateTime, ParseError>;
-                                if settings_manager::get_bool("show-seconds") {
-                                    new_stop_time = NaiveDateTime::parse_from_str(
-                                                        &new_stop_time_str,
-                                                        time_formatter);
-                                } else {
-                                    new_stop_time = NaiveDateTime::parse_from_str(
-                                                            &new_stop_time_str,
-                                                            time_formatter_no_secs);
-                                }
-                                if let Err(_) = new_stop_time {
-                                    instructions.set_visible(true);
-                                    do_not_close = true;
-                                } else {
-                                    let new_stop_time = Local.from_local_datetime(&new_stop_time.unwrap()).unwrap();
-                                    new_stop_time_edited = new_stop_time.to_rfc3339();
-                                    if start_successful {
-                                        if (new_stop_time - new_start_time_local).num_seconds() >= 0 {
-                                            database::update_stop_time(task.id, new_stop_time_edited.clone())
-                                                .expect("Failed to update stop time.");
-                                            database::update_start_time(task.id, new_start_time_edited.clone())
-                                                .expect("Failed to update start time.");
+                    let time_error = gtk::Label::new(Some(&gettext(
+                        "*Start time cannot be later than stop time.",
+                    )));
+                    time_error.set_visible(false);
+                    time_error.add_css_class("error_message");
+
+                    let future_error =
+                        gtk::Label::new(Some(&gettext("*Time cannot be in the future.")));
+                    future_error.set_visible(false);
+                    future_error.add_css_class("error_message");
+
+                    let delete_task_btn = gtk::Button::new();
+                    delete_task_btn.set_icon_name("user-trash-symbolic");
+                    delete_task_btn.set_tooltip_text(Some(&gettext("Delete task")));
+                    delete_task_btn.set_hexpand(false);
+                    delete_task_btn.set_vexpand(false);
+                    delete_task_btn.set_halign(gtk::Align::End);
+
+                    vert_box.append(&task_name_edit);
+                    vert_box.append(&task_tags_edit);
+                    labels_box.append(&start_label);
+                    labels_box.append(&stop_label);
+                    times_box.append(&start_time_edit);
+                    times_box.append(&stop_time_edit);
+                    vert_box.append(&labels_box);
+                    vert_box.append(&times_box);
+                    vert_box.append(&instructions);
+                    vert_box.append(&time_error);
+                    vert_box.append(&future_error);
+                    message_area.append(&delete_task_btn);
+                    message_area.append(&vert_box);
+
+                    delete_task_btn.connect_clicked(glib::clone!(
+                        #[strong]
+                        task,
+                        #[strong]
+                        dialog,
+                        #[weak]
+                        this,
+                        move |_| {
+                            let delete_confirmation = gtk::MessageDialog::with_markup(
+                                Some(&dialog),
+                                gtk::DialogFlags::MODAL,
+                                gtk::MessageType::Question,
+                                gtk::ButtonsType::OkCancel,
+                                Some(&format!(
+                                    "<span size='x-large' weight='bold'>{}</span>",
+                                    &gettext("Delete task?")
+                                )),
+                            );
+                            let delete_btn = delete_confirmation
+                                .widget_for_response(gtk::ResponseType::Ok)
+                                .unwrap();
+                            delete_btn.add_css_class("destructive-action");
+
+                            delete_confirmation.connect_response(glib::clone!(
+                                #[strong]
+                                dialog,
+                                #[strong]
+                                delete_confirmation,
+                                move |_, resp| {
+                                    if resp == gtk::ResponseType::Ok {
+                                        let _ = database::delete_by_id(task.id);
+                                        if task_group_len == 1 {
+                                            delete_confirmation.close();
+                                            dialog.close();
+                                            this.close();
+                                            let window = FurtheranceWindow::default();
+                                            window.reset_history_box();
+                                        } else {
+                                            delete_confirmation.close();
+                                            this.clear_task_list();
+                                            dialog.close();
                                         }
                                     } else {
-                                        let old_start_time = DateTime::parse_from_rfc3339(&start_time);
-                                        let old_start_time = old_start_time.unwrap().with_timezone(&Local);
-                                        if (Local::now() - new_stop_time).num_seconds() < 0 {
-                                            future_error.set_visible(true);
-                                            do_not_close = true;
-                                        } else if (new_stop_time - old_start_time).num_seconds() >= 0 {
-                                            database::update_stop_time(task.id, new_stop_time_edited)
-                                                .expect("Failed to update stop time.");
-                                        } else {
-                                            time_error.set_visible(true);
-                                            do_not_close = true;
-                                        }
+                                        delete_confirmation.close();
                                     }
-                                    stop_successful = true;
                                 }
+                            ));
+
+                            if settings_manager::get_bool("delete-confirmation") {
+                                delete_confirmation.show();
+                            } else {
+                                delete_confirmation.response(gtk::ResponseType::Ok);
                             }
-                            if task_name_edit.text() != name {
-                                database::update_task_name(task.id, task_name_edit.text().to_string())
+                        }
+                    ));
+
+                    dialog.connect_response(glib::clone!(
+                        #[strong]
+                        dialog,
+                        #[strong(rename_to = name)]
+                        task.task_name,
+                        #[strong(rename_to = start_time)]
+                        task.start_time,
+                        #[strong(rename_to = stop_time)]
+                        task.stop_time,
+                        #[strong(rename_to = tags)]
+                        task.tags,
+                        move |_, resp| {
+                            if resp == gtk::ResponseType::Ok {
+                                instructions.set_visible(false);
+                                time_error.set_visible(false);
+                                future_error.set_visible(false);
+                                let mut start_successful = false;
+                                let mut stop_successful = false;
+                                let mut do_not_close = false;
+                                let mut new_start_time_edited: String = "".to_string();
+                                let mut new_start_time_local = Local::now();
+                                let new_stop_time_edited: String;
+                                if start_time_edit.text() != start_time_w_year {
+                                    let new_start_time_str = start_time_edit.text();
+                                    let new_start_time: Result<NaiveDateTime, ParseError>;
+                                    if settings_manager::get_bool("show-seconds") {
+                                        new_start_time = NaiveDateTime::parse_from_str(
+                                            &new_start_time_str,
+                                            time_formatter,
+                                        );
+                                    } else {
+                                        new_start_time = NaiveDateTime::parse_from_str(
+                                            &new_start_time_str,
+                                            time_formatter_no_secs,
+                                        );
+                                    }
+
+                                    if let Err(_) = new_start_time {
+                                        instructions.set_visible(true);
+                                        do_not_close = true;
+                                    } else if (Local::now()
+                                        - Local
+                                            .from_local_datetime(&new_start_time.unwrap())
+                                            .unwrap())
+                                    .num_seconds()
+                                        < 0
+                                    {
+                                        future_error.set_visible(true);
+                                        do_not_close = true;
+                                    } else {
+                                        new_start_time_local = Local
+                                            .from_local_datetime(&new_start_time.unwrap())
+                                            .unwrap();
+                                        new_start_time_edited = new_start_time_local.to_rfc3339();
+                                        start_successful = true;
+                                    }
+                                }
+                                if stop_time_edit.text() != stop_time_w_year {
+                                    let new_stop_time_str = stop_time_edit.text();
+                                    let new_stop_time: Result<NaiveDateTime, ParseError>;
+                                    if settings_manager::get_bool("show-seconds") {
+                                        new_stop_time = NaiveDateTime::parse_from_str(
+                                            &new_stop_time_str,
+                                            time_formatter,
+                                        );
+                                    } else {
+                                        new_stop_time = NaiveDateTime::parse_from_str(
+                                            &new_stop_time_str,
+                                            time_formatter_no_secs,
+                                        );
+                                    }
+                                    if let Err(_) = new_stop_time {
+                                        instructions.set_visible(true);
+                                        do_not_close = true;
+                                    } else {
+                                        let new_stop_time = Local
+                                            .from_local_datetime(&new_stop_time.unwrap())
+                                            .unwrap();
+                                        new_stop_time_edited = new_stop_time.to_rfc3339();
+                                        if start_successful {
+                                            if (new_stop_time - new_start_time_local).num_seconds()
+                                                >= 0
+                                            {
+                                                database::update_stop_time(
+                                                    task.id,
+                                                    new_stop_time_edited.clone(),
+                                                )
+                                                .expect("Failed to update stop time.");
+                                                database::update_start_time(
+                                                    task.id,
+                                                    new_start_time_edited.clone(),
+                                                )
+                                                .expect("Failed to update start time.");
+                                            }
+                                        } else {
+                                            let old_start_time =
+                                                DateTime::parse_from_rfc3339(&start_time);
+                                            let old_start_time =
+                                                old_start_time.unwrap().with_timezone(&Local);
+                                            if (Local::now() - new_stop_time).num_seconds() < 0 {
+                                                future_error.set_visible(true);
+                                                do_not_close = true;
+                                            } else if (new_stop_time - old_start_time).num_seconds()
+                                                >= 0
+                                            {
+                                                database::update_stop_time(
+                                                    task.id,
+                                                    new_stop_time_edited,
+                                                )
+                                                .expect("Failed to update stop time.");
+                                            } else {
+                                                time_error.set_visible(true);
+                                                do_not_close = true;
+                                            }
+                                        }
+                                        stop_successful = true;
+                                    }
+                                }
+                                if task_name_edit.text() != name {
+                                    database::update_task_name(
+                                        task.id,
+                                        task_name_edit.text().to_string(),
+                                    )
                                     .expect("Failed to update task name.");
-                            }
-
-                            if task_tags_edit.text() != task_tags {
-                                let new_tags = task_tags_edit.text();
-                                let mut split_tags: Vec<&str> = new_tags.trim().split("#").collect();
-	                            split_tags = split_tags.iter().map(|x| x.trim()).collect();
-	                            // Don't allow empty tags
-	                            split_tags.retain(|&x| !x.trim().is_empty());
-	                            // Handle duplicate tags before they are saved
-	                            split_tags = split_tags.into_iter().unique().collect();
-	                            // Lowercase tags
-	                            let lower_tags: Vec<String> = split_tags.iter().map(|x| x.to_lowercase()).collect();
-	                            let new_tag_list = lower_tags.join(" #");
-                                database::update_tags(task.id, new_tag_list)
-                                    .expect("Failed to update tags.");
-                            }
-
-                            if start_successful && !stop_successful {
-                                let old_stop_time = DateTime::parse_from_rfc3339(&stop_time);
-                                let old_stop_time = old_stop_time.unwrap().with_timezone(&Local);
-                                if (old_stop_time - new_start_time_local).num_seconds() >= 0 {
-                                    database::update_start_time(task.id, new_start_time_edited)
-                                        .expect("Failed to update start time.");
-                                } else {
-                                    time_error.set_visible(true);
-                                    do_not_close = true;
                                 }
-                            }
 
-                            if !do_not_close {
-                                this.clear_task_list();
+                                if task_tags_edit.text() != task_tags {
+                                    let new_tags = task_tags_edit.text();
+                                    let mut split_tags: Vec<&str> =
+                                        new_tags.trim().split("#").collect();
+                                    split_tags = split_tags.iter().map(|x| x.trim()).collect();
+                                    // Don't allow empty tags
+                                    split_tags.retain(|&x| !x.trim().is_empty());
+                                    // Handle duplicate tags before they are saved
+                                    split_tags = split_tags.into_iter().unique().collect();
+                                    // Lowercase tags
+                                    let lower_tags: Vec<String> =
+                                        split_tags.iter().map(|x| x.to_lowercase()).collect();
+                                    let new_tag_list = lower_tags.join(" #");
+                                    database::update_tags(task.id, new_tag_list)
+                                        .expect("Failed to update tags.");
+                                }
+
+                                if start_successful && !stop_successful {
+                                    let old_stop_time = DateTime::parse_from_rfc3339(&stop_time);
+                                    let old_stop_time =
+                                        old_stop_time.unwrap().with_timezone(&Local);
+                                    if (old_stop_time - new_start_time_local).num_seconds() >= 0 {
+                                        database::update_start_time(task.id, new_start_time_edited)
+                                            .expect("Failed to update start time.");
+                                    } else {
+                                        time_error.set_visible(true);
+                                        do_not_close = true;
+                                    }
+                                }
+
+                                if !do_not_close {
+                                    this.clear_task_list();
+                                    dialog.close();
+                                }
+                            } else {
+                                // If Cancel, close dialog and do nothing.
                                 dialog.close();
                             }
-
-                        } else {
-                            // If Cancel, close dialog and do nothing.
-                            dialog.close();
                         }
-                    }),
-                );
+                    ));
 
-                dialog.show();
-            }));
+                    dialog.show();
+                }
+            ));
 
             stop.connect_clicked(move |_| {
                 start.emit_clicked();
@@ -478,18 +540,22 @@ impl FurTaskDetails {
         let imp = imp::FurTaskDetails::from_obj(self);
 
         // Add headerbar to dialog when scrolled far
-        imp.scrolled_window.vadjustment().connect_value_notify(
-            glib::clone!(#[weak(rename_to = this)] self, move |adj|{
-                let imp = imp::FurTaskDetails::from_obj(&this);
-                if adj.value() < 120.0 {
-                    imp.headerbar.add_css_class("hidden");
-                    imp.dialog_title.set_visible(false);
-                }else {
-                    imp.headerbar.remove_css_class("hidden");
-                    imp.dialog_title.set_visible(true);
+        imp.scrolled_window
+            .vadjustment()
+            .connect_value_notify(glib::clone!(
+                #[weak(rename_to = this)]
+                self,
+                move |adj| {
+                    let imp = imp::FurTaskDetails::from_obj(&this);
+                    if adj.value() < 120.0 {
+                        imp.headerbar.add_css_class("hidden");
+                        imp.dialog_title.set_visible(false);
+                    } else {
+                        imp.headerbar.remove_css_class("hidden");
+                        imp.dialog_title.set_visible(true);
+                    }
                 }
-            }),
-        );
+            ));
 
         // Make dialog header smaller if the name is long
         imp.task_name_label.connect_label_notify(|label| {
@@ -505,305 +571,349 @@ impl FurTaskDetails {
         });
 
         // Change all task names at once
-        imp.edit_task_names_btn.connect_clicked(glib::clone!(#[weak(rename_to = this)] self, move|_| {
-            let dialog = gtk::MessageDialog::new(
-                Some(&this),
-                gtk::DialogFlags::MODAL,
-                gtk::MessageType::Question,
-                gtk::ButtonsType::OkCancel,
-                &format!("<span size='x-large' weight='bold'>{}</span>", &gettext("Edit Task")),
-            );
-            dialog.set_use_markup(true);
+        imp.edit_task_names_btn.connect_clicked(glib::clone!(
+            #[weak(rename_to = this)]
+            self,
+            move |_| {
+                let dialog = gtk::MessageDialog::new(
+                    Some(&this),
+                    gtk::DialogFlags::MODAL,
+                    gtk::MessageType::Question,
+                    gtk::ButtonsType::OkCancel,
+                    &format!(
+                        "<span size='x-large' weight='bold'>{}</span>",
+                        &gettext("Edit Task")
+                    ),
+                );
+                dialog.set_use_markup(true);
 
-            let message_area = dialog.message_area().downcast::<gtk::Box>().unwrap();
-            let new_name_entry = gtk::Entry::new();
-            new_name_entry.set_placeholder_text(Some(&gettext("New Name #tags")));
-            let imp3 = imp::FurTaskDetails::from_obj(&this);
-            new_name_entry.set_text(&imp3.orig_name_with_tags.borrow().to_string());
-            let cant_be_empty = gtk::Label::new(Some(&gettext("Task name cannot be empty.")));
-            cant_be_empty.add_css_class("error_message");
-            cant_be_empty.hide();
-            message_area.append(&new_name_entry);
-            message_area.append(&cant_be_empty);
-
-            dialog.connect_response(move |dialog, resp| {
-                let window = FurtheranceWindow::default();
+                let message_area = dialog.message_area().downcast::<gtk::Box>().unwrap();
+                let new_name_entry = gtk::Entry::new();
+                new_name_entry.set_placeholder_text(Some(&gettext("New Name #tags")));
+                let imp3 = imp::FurTaskDetails::from_obj(&this);
+                new_name_entry.set_text(&imp3.orig_name_with_tags.borrow().to_string());
+                let cant_be_empty = gtk::Label::new(Some(&gettext("Task name cannot be empty.")));
+                cant_be_empty.add_css_class("error_message");
                 cant_be_empty.hide();
-                if resp == gtk::ResponseType::Ok {
-                    let new_name_text = new_name_entry.text();
-                    let mut split_tags: Vec<&str> = new_name_text.trim().split("#").collect();
-                    // Remove task name from tags list
-                    let new_task_name = *split_tags.first().unwrap();
-                    split_tags.remove(0);
-                    // Trim whitespace around each tag
-                    split_tags = split_tags.iter().map(|x| x.trim()).collect();
-                    // Don't allow empty tags
-                    split_tags.retain(|&x| !x.trim().is_empty());
-                    // Handle duplicate tags before they are ever saved
-                    split_tags = split_tags.into_iter().unique().collect();
-                    // Lowercase tags
-                    let lower_tags: Vec<String> = split_tags.iter().map(|x| x.to_lowercase()).collect();
-                    let tag_list = lower_tags.join(" #");
+                message_area.append(&new_name_entry);
+                message_area.append(&cant_be_empty);
 
-                    if !new_task_name.is_empty() {
-                        // Change all task names & tags
-                        let imp2 = imp::FurTaskDetails::from_obj(&this);
-                        for id in &*imp2.all_task_ids.borrow() {
-                            database::update_task_name(*id, new_task_name.trim().to_string())
-                                .expect("Could not update group of task names");
-                            database::update_tags(*id, tag_list.clone())
-                                .expect("Could not update tags of group");
+                dialog.connect_response(move |dialog, resp| {
+                    let window = FurtheranceWindow::default();
+                    cant_be_empty.hide();
+                    if resp == gtk::ResponseType::Ok {
+                        let new_name_text = new_name_entry.text();
+                        let mut split_tags: Vec<&str> = new_name_text.trim().split("#").collect();
+                        // Remove task name from tags list
+                        let new_task_name = *split_tags.first().unwrap();
+                        split_tags.remove(0);
+                        // Trim whitespace around each tag
+                        split_tags = split_tags.iter().map(|x| x.trim()).collect();
+                        // Don't allow empty tags
+                        split_tags.retain(|&x| !x.trim().is_empty());
+                        // Handle duplicate tags before they are ever saved
+                        split_tags = split_tags.into_iter().unique().collect();
+                        // Lowercase tags
+                        let lower_tags: Vec<String> =
+                            split_tags.iter().map(|x| x.to_lowercase()).collect();
+                        let tag_list = lower_tags.join(" #");
+
+                        if !new_task_name.is_empty() {
+                            // Change all task names & tags
+                            let imp2 = imp::FurTaskDetails::from_obj(&this);
+                            for id in &*imp2.all_task_ids.borrow() {
+                                database::update_task_name(*id, new_task_name.trim().to_string())
+                                    .expect("Could not update group of task names");
+                                database::update_tags(*id, tag_list.clone())
+                                    .expect("Could not update tags of group");
+                            }
+                            imp2.all_task_ids.borrow_mut().clear();
+                            window.reset_history_box();
+                            dialog.close();
+                            this.close();
+                        } else {
+                            // Clear any spaces from entry
+                            new_name_entry.set_text("");
+                            cant_be_empty.show();
                         }
-                        imp2.all_task_ids.borrow_mut().clear();
-                        window.reset_history_box();
+                    } else if resp == gtk::ResponseType::Cancel {
                         dialog.close();
-                        this.close();
-                    } else {
-                        // Clear any spaces from entry
-                        new_name_entry.set_text("");
-                        cant_be_empty.show();
                     }
-                } else if resp == gtk::ResponseType::Cancel {
-                    dialog.close();
-                }
-            });
+                });
 
-            dialog.show();
-        }));
+                dialog.show();
+            }
+        ));
     }
 
     fn setup_delete_all(&self) {
         let imp = imp::FurTaskDetails::from_obj(self);
-        imp.delete_all_btn.connect_clicked(glib::clone!(#[weak(rename_to = this)] self, move |_|{
-            let dialog = gtk::MessageDialog::with_markup(
-                Some(&this),
-                gtk::DialogFlags::MODAL,
-                gtk::MessageType::Warning,
-                gtk::ButtonsType::None,
-                Some(&format!("<span size='large'>{}</span>", &gettext("Delete All?"))),
-            );
-            dialog.set_secondary_text(Some(&gettext("This will delete all occurrences of this task on this day.")));
-            dialog.add_buttons(&[
-                (&gettext("Cancel"), gtk::ResponseType::Reject),
-                (&gettext("Delete"), gtk::ResponseType::Accept)
-            ]);
-            let delete_btn = dialog.widget_for_response(gtk::ResponseType::Accept).unwrap();
-            delete_btn.add_css_class("destructive-action");
+        imp.delete_all_btn.connect_clicked(glib::clone!(
+            #[weak(rename_to = this)]
+            self,
+            move |_| {
+                let dialog = gtk::MessageDialog::with_markup(
+                    Some(&this),
+                    gtk::DialogFlags::MODAL,
+                    gtk::MessageType::Warning,
+                    gtk::ButtonsType::None,
+                    Some(&format!(
+                        "<span size='large'>{}</span>",
+                        &gettext("Delete All?")
+                    )),
+                );
+                dialog.set_secondary_text(Some(&gettext(
+                    "This will delete all occurrences of this task on this day.",
+                )));
+                dialog.add_buttons(&[
+                    (&gettext("Cancel"), gtk::ResponseType::Reject),
+                    (&gettext("Delete"), gtk::ResponseType::Accept),
+                ]);
+                let delete_btn = dialog
+                    .widget_for_response(gtk::ResponseType::Accept)
+                    .unwrap();
+                delete_btn.add_css_class("destructive-action");
 
-            dialog.connect_response(glib::clone!(#[strong] dialog, move |_,resp|{
-                if resp == gtk::ResponseType::Accept {
-                    this.delete_all();
-                    dialog.close();
-                    this.close();
-                    let window = FurtheranceWindow::default();
-                    window.reset_history_box();
+                dialog.connect_response(glib::clone!(
+                    #[strong]
+                    dialog,
+                    move |_, resp| {
+                        if resp == gtk::ResponseType::Accept {
+                            this.delete_all();
+                            dialog.close();
+                            this.close();
+                            let window = FurtheranceWindow::default();
+                            window.reset_history_box();
+                        } else {
+                            dialog.close();
+                        }
+                    }
+                ));
+
+                if settings_manager::get_bool("delete-confirmation") {
+                    dialog.show();
                 } else {
-                    dialog.close();
+                    dialog.response(gtk::ResponseType::Accept);
                 }
-            }));
-
-            if settings_manager::get_bool("delete-confirmation") {
-                dialog.show();
-            } else {
-                dialog.response(gtk::ResponseType::Accept);
             }
-
-        }));
+        ));
     }
 
     fn setup_add_similar(&self) {
         let imp = imp::FurTaskDetails::from_obj(self);
-        imp.add_similar_btn.connect_clicked(glib::clone!(#[weak(rename_to = this)] self, move |_|{
-            let imp2 = imp::FurTaskDetails::from_obj(&this);
-            let dialog = gtk::MessageDialog::new(
-                Some(&this),
-                gtk::DialogFlags::MODAL,
-                gtk::MessageType::Question,
-                gtk::ButtonsType::None,
-                &format!("<span size='x-large' weight='bold'>{}</span>", &gettext("New Task")),
-            );
-            dialog.set_use_markup(true);
-            dialog.add_buttons(&[
-                (&gettext("Cancel"), gtk::ResponseType::Cancel),
-                (&gettext("Add"), gtk::ResponseType::Ok)
-            ]);
+        imp.add_similar_btn.connect_clicked(glib::clone!(
+            #[weak(rename_to = this)]
+            self,
+            move |_| {
+                let imp2 = imp::FurTaskDetails::from_obj(&this);
+                let dialog = gtk::MessageDialog::new(
+                    Some(&this),
+                    gtk::DialogFlags::MODAL,
+                    gtk::MessageType::Question,
+                    gtk::ButtonsType::None,
+                    &format!(
+                        "<span size='x-large' weight='bold'>{}</span>",
+                        &gettext("New Task")
+                    ),
+                );
+                dialog.set_use_markup(true);
+                dialog.add_buttons(&[
+                    (&gettext("Cancel"), gtk::ResponseType::Cancel),
+                    (&gettext("Add"), gtk::ResponseType::Ok),
+                ]);
 
-            let message_area = dialog.message_area().downcast::<gtk::Box>().unwrap();
-            let vert_box = gtk::Box::new(gtk::Orientation::Vertical, 5);
-            let task_name_edit = gtk::Entry::new();
-            task_name_edit.set_placeholder_text(Some(&imp2.this_task_name.borrow()));
-            task_name_edit.set_text(&imp2.this_task_name.borrow());
-            let task_tags_edit = gtk::Entry::new();
-            let tags_placeholder = format!("#{}", imp2.this_task_tags.borrow());
-            task_tags_edit.set_placeholder_text(Some(&tags_placeholder));
-            task_tags_edit.set_text(&tags_placeholder);
+                let message_area = dialog.message_area().downcast::<gtk::Box>().unwrap();
+                let vert_box = gtk::Box::new(gtk::Orientation::Vertical, 5);
+                let task_name_edit = gtk::Entry::new();
+                task_name_edit.set_placeholder_text(Some(&imp2.this_task_name.borrow()));
+                task_name_edit.set_text(&imp2.this_task_name.borrow());
+                let task_tags_edit = gtk::Entry::new();
+                let tags_placeholder = format!("#{}", imp2.this_task_tags.borrow());
+                task_tags_edit.set_placeholder_text(Some(&tags_placeholder));
+                task_tags_edit.set_text(&tags_placeholder);
 
-            let labels_box = gtk::Box::new(gtk::Orientation::Horizontal, 5);
-            labels_box.set_homogeneous(true);
-            let start_label = gtk::Label::new(Some(&gettext("Start")));
-            start_label.add_css_class("title-4");
-            let stop_label = gtk::Label::new(Some(&gettext("Stop")));
-            stop_label.add_css_class("title-4");
-            let times_box = gtk::Box::new(gtk::Orientation::Horizontal, 5);
-            times_box.set_homogeneous(true);
+                let labels_box = gtk::Box::new(gtk::Orientation::Horizontal, 5);
+                labels_box.set_homogeneous(true);
+                let start_label = gtk::Label::new(Some(&gettext("Start")));
+                start_label.add_css_class("title-4");
+                let stop_label = gtk::Label::new(Some(&gettext("Stop")));
+                stop_label.add_css_class("title-4");
+                let times_box = gtk::Box::new(gtk::Orientation::Horizontal, 5);
+                times_box.set_homogeneous(true);
 
-            let stop_time = Local::now();
-            let start_time = stop_time - Duration::minutes(1);
+                let stop_time = Local::now();
+                let start_time = stop_time - Duration::minutes(1);
 
-            let time_formatter = "%F %H:%M:%S";
-            let time_formatter_no_secs = "%F %H:%M";
+                let time_formatter = "%F %H:%M:%S";
+                let time_formatter_no_secs = "%F %H:%M";
 
-            let mut start_time_w_year = start_time.format(time_formatter).to_string();
-            if !settings_manager::get_bool("show-seconds") {
-                start_time_w_year = start_time.format(time_formatter_no_secs).to_string();
-            }
-            let mut stop_time_w_year = stop_time.format(time_formatter).to_string();
-            if !settings_manager::get_bool("show-seconds") {
-                stop_time_w_year = stop_time.format(time_formatter_no_secs).to_string();
-            }
-            let start_time_edit = gtk::Entry::new();
-            start_time_edit.set_text(&start_time_w_year);
-            let stop_time_edit = gtk::Entry::new();
-            stop_time_edit.set_text(&stop_time_w_year);
-
-            let instructions = gtk::Label::new(Some(
-                &gettext("*Use the format YYYY-MM-DD HH:MM:SS")));
-            if !settings_manager::get_bool("show-seconds") {
-                instructions.set_text(&gettext("*Use the format YYYY-MM-DD HH:MM"));
-            }
-            instructions.set_visible(false);
-            instructions.add_css_class("error_message");
-
-            let time_error = gtk::Label::new(Some(
-                &gettext("*Start time cannot be later than stop time.")));
-            time_error.set_visible(false);
-            time_error.add_css_class("error_message");
-
-            let future_error = gtk::Label::new(Some(
-                &gettext("*Time cannot be in the future.")));
-            future_error.set_visible(false);
-            future_error.add_css_class("error_message");
-
-            let name_error = gtk::Label::new(Some(
-                &gettext("*Task name cannot be blank.")));
-            name_error.set_visible(false);
-            name_error.add_css_class("error_message");
-
-            vert_box.append(&task_name_edit);
-            vert_box.append(&task_tags_edit);
-            labels_box.append(&start_label);
-            labels_box.append(&stop_label);
-            times_box.append(&start_time_edit);
-            times_box.append(&stop_time_edit);
-            vert_box.append(&labels_box);
-            vert_box.append(&times_box);
-            vert_box.append(&instructions);
-            vert_box.append(&time_error);
-            vert_box.append(&future_error);
-            vert_box.append(&name_error);
-            message_area.append(&vert_box);
-
-            dialog.connect_response(glib::clone!(#[strong] dialog, move |_ , resp| {
-                if resp == gtk::ResponseType::Ok {
-                    instructions.set_visible(false);
-                    time_error.set_visible(false);
-                    future_error.set_visible(false);
-                    name_error.set_visible(false);
-                    let mut do_not_close = false;
-                    let mut new_start_time_local = Local::now();
-                    let mut new_stop_time_local = Local::now();
-
-                    // Task Name
-                    if task_name_edit.text().trim().is_empty() {
-                        name_error.set_visible(true);
-                        do_not_close = true;
-                    }
-
-                    // Start Time
-                    let new_start_time_str = start_time_edit.text();
-                    let new_start_time: Result<NaiveDateTime, ParseError>;
-                    if settings_manager::get_bool("show-seconds") {
-                        new_start_time = NaiveDateTime::parse_from_str(
-                                            &new_start_time_str,
-                                            time_formatter);
-                    } else {
-                        new_start_time = NaiveDateTime::parse_from_str(
-                                                &new_start_time_str,
-                                                time_formatter_no_secs);
-                    }
-                    if let Err(_) = new_start_time {
-                        instructions.set_visible(true);
-                        do_not_close = true;
-                    } else {
-                        new_start_time_local = Local.from_local_datetime(&new_start_time.unwrap()).unwrap();
-                        if (Local::now() - new_start_time_local).num_seconds() < 0 {
-                            future_error.set_visible(true);
-                            do_not_close = true;
-                        }
-                    }
-
-                    // Stop Time
-                    let new_stop_time_str = stop_time_edit.text();
-                    let new_stop_time: Result<NaiveDateTime, ParseError>;
-                    if settings_manager::get_bool("show-seconds") {
-                        new_stop_time = NaiveDateTime::parse_from_str(
-                                            &new_stop_time_str,
-                                            time_formatter);
-                    } else {
-                        new_stop_time = NaiveDateTime::parse_from_str(
-                                                &new_stop_time_str,
-                                                time_formatter_no_secs);
-                    }
-                    if let Err(_) = new_stop_time {
-                        instructions.set_visible(true);
-                        do_not_close = true;
-                    } else {
-                        new_stop_time_local = Local.from_local_datetime(&new_stop_time.unwrap()).unwrap();
-                        if (Local::now() - new_stop_time_local).num_seconds() < 0 {
-                            future_error.set_visible(true);
-                            do_not_close = true;
-                        }
-                    }
-
-                    // Start time can't be later than stop time
-                    if !do_not_close && (new_stop_time_local - new_start_time_local).num_seconds() < 0 {
-                        time_error.set_visible(true);
-                        do_not_close = true;
-                    }
-
-                    // Tags
-                    let mut new_tag_list = "".to_string();
-                    if !task_tags_edit.text().trim().is_empty() {
-                        let new_tags = task_tags_edit.text();
-                        let mut split_tags: Vec<&str> = new_tags.trim().split("#").collect();
-                        split_tags = split_tags.iter().map(|x| x.trim()).collect();
-                        // Don't allow empty tags
-                        split_tags.retain(|&x| !x.trim().is_empty());
-                        // Handle duplicate tags before they are saved
-                        split_tags = split_tags.into_iter().unique().collect();
-                        // Lowercase tags
-                        let lower_tags: Vec<String> = split_tags.iter().map(|x| x.to_lowercase()).collect();
-                        new_tag_list = lower_tags.join(" #");
-                    }
-
-                    if !do_not_close {
-                        let _ = database::db_write(task_name_edit.text().trim(),
-                                                    new_start_time_local,
-                                                    new_stop_time_local,
-                                                    new_tag_list);
-                        let window = FurtheranceWindow::default();
-                        window.reset_history_box();
-                        dialog.close();
-                        this.close();
-                    }
-
-                } else if resp == gtk::ResponseType::Cancel {
-                    dialog.close();
+                let mut start_time_w_year = start_time.format(time_formatter).to_string();
+                if !settings_manager::get_bool("show-seconds") {
+                    start_time_w_year = start_time.format(time_formatter_no_secs).to_string();
                 }
-            }));
+                let mut stop_time_w_year = stop_time.format(time_formatter).to_string();
+                if !settings_manager::get_bool("show-seconds") {
+                    stop_time_w_year = stop_time.format(time_formatter_no_secs).to_string();
+                }
+                let start_time_edit = gtk::Entry::new();
+                start_time_edit.set_text(&start_time_w_year);
+                let stop_time_edit = gtk::Entry::new();
+                stop_time_edit.set_text(&stop_time_w_year);
 
-            dialog.show();
-        }));
+                let instructions =
+                    gtk::Label::new(Some(&gettext("*Use the format YYYY-MM-DD HH:MM:SS")));
+                if !settings_manager::get_bool("show-seconds") {
+                    instructions.set_text(&gettext("*Use the format YYYY-MM-DD HH:MM"));
+                }
+                instructions.set_visible(false);
+                instructions.add_css_class("error_message");
+
+                let time_error = gtk::Label::new(Some(&gettext(
+                    "*Start time cannot be later than stop time.",
+                )));
+                time_error.set_visible(false);
+                time_error.add_css_class("error_message");
+
+                let future_error =
+                    gtk::Label::new(Some(&gettext("*Time cannot be in the future.")));
+                future_error.set_visible(false);
+                future_error.add_css_class("error_message");
+
+                let name_error = gtk::Label::new(Some(&gettext("*Task name cannot be blank.")));
+                name_error.set_visible(false);
+                name_error.add_css_class("error_message");
+
+                vert_box.append(&task_name_edit);
+                vert_box.append(&task_tags_edit);
+                labels_box.append(&start_label);
+                labels_box.append(&stop_label);
+                times_box.append(&start_time_edit);
+                times_box.append(&stop_time_edit);
+                vert_box.append(&labels_box);
+                vert_box.append(&times_box);
+                vert_box.append(&instructions);
+                vert_box.append(&time_error);
+                vert_box.append(&future_error);
+                vert_box.append(&name_error);
+                message_area.append(&vert_box);
+
+                dialog.connect_response(glib::clone!(
+                    #[strong]
+                    dialog,
+                    move |_, resp| {
+                        if resp == gtk::ResponseType::Ok {
+                            instructions.set_visible(false);
+                            time_error.set_visible(false);
+                            future_error.set_visible(false);
+                            name_error.set_visible(false);
+                            let mut do_not_close = false;
+                            let mut new_start_time_local = Local::now();
+                            let mut new_stop_time_local = Local::now();
+
+                            // Task Name
+                            if task_name_edit.text().trim().is_empty() {
+                                name_error.set_visible(true);
+                                do_not_close = true;
+                            }
+
+                            // Start Time
+                            let new_start_time_str = start_time_edit.text();
+                            let new_start_time: Result<NaiveDateTime, ParseError>;
+                            if settings_manager::get_bool("show-seconds") {
+                                new_start_time = NaiveDateTime::parse_from_str(
+                                    &new_start_time_str,
+                                    time_formatter,
+                                );
+                            } else {
+                                new_start_time = NaiveDateTime::parse_from_str(
+                                    &new_start_time_str,
+                                    time_formatter_no_secs,
+                                );
+                            }
+                            if let Err(_) = new_start_time {
+                                instructions.set_visible(true);
+                                do_not_close = true;
+                            } else {
+                                new_start_time_local =
+                                    Local.from_local_datetime(&new_start_time.unwrap()).unwrap();
+                                if (Local::now() - new_start_time_local).num_seconds() < 0 {
+                                    future_error.set_visible(true);
+                                    do_not_close = true;
+                                }
+                            }
+
+                            // Stop Time
+                            let new_stop_time_str = stop_time_edit.text();
+                            let new_stop_time: Result<NaiveDateTime, ParseError>;
+                            if settings_manager::get_bool("show-seconds") {
+                                new_stop_time = NaiveDateTime::parse_from_str(
+                                    &new_stop_time_str,
+                                    time_formatter,
+                                );
+                            } else {
+                                new_stop_time = NaiveDateTime::parse_from_str(
+                                    &new_stop_time_str,
+                                    time_formatter_no_secs,
+                                );
+                            }
+                            if let Err(_) = new_stop_time {
+                                instructions.set_visible(true);
+                                do_not_close = true;
+                            } else {
+                                new_stop_time_local =
+                                    Local.from_local_datetime(&new_stop_time.unwrap()).unwrap();
+                                if (Local::now() - new_stop_time_local).num_seconds() < 0 {
+                                    future_error.set_visible(true);
+                                    do_not_close = true;
+                                }
+                            }
+
+                            // Start time can't be later than stop time
+                            if !do_not_close
+                                && (new_stop_time_local - new_start_time_local).num_seconds() < 0
+                            {
+                                time_error.set_visible(true);
+                                do_not_close = true;
+                            }
+
+                            // Tags
+                            let mut new_tag_list = "".to_string();
+                            if !task_tags_edit.text().trim().is_empty() {
+                                let new_tags = task_tags_edit.text();
+                                let mut split_tags: Vec<&str> =
+                                    new_tags.trim().split("#").collect();
+                                split_tags = split_tags.iter().map(|x| x.trim()).collect();
+                                // Don't allow empty tags
+                                split_tags.retain(|&x| !x.trim().is_empty());
+                                // Handle duplicate tags before they are saved
+                                split_tags = split_tags.into_iter().unique().collect();
+                                // Lowercase tags
+                                let lower_tags: Vec<String> =
+                                    split_tags.iter().map(|x| x.to_lowercase()).collect();
+                                new_tag_list = lower_tags.join(" #");
+                            }
+
+                            if !do_not_close {
+                                let _ = database::db_write(
+                                    task_name_edit.text().trim(),
+                                    new_start_time_local,
+                                    new_stop_time_local,
+                                    new_tag_list,
+                                );
+                                let window = FurtheranceWindow::default();
+                                window.reset_history_box();
+                                dialog.close();
+                                this.close();
+                            }
+                        } else if resp == gtk::ResponseType::Cancel {
+                            dialog.close();
+                        }
+                    }
+                ));
+
+                dialog.show();
+            }
+        ));
     }
 
     fn delete_all(&self) {
