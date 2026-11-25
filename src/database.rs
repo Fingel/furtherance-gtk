@@ -50,6 +50,7 @@ impl Display for Task {
 
 #[derive(
     Debug,
+    Default,
     Clone,
     Copy,
     PartialEq,
@@ -60,15 +61,9 @@ impl Display for Task {
     num_derive::ToPrimitive,
 )]
 pub enum SortOrder {
+    #[default] // matches the default in sqlite
     Ascending = 0,
     Descending,
-}
-
-impl Default for SortOrder {
-    fn default() -> Self {
-        // matches the default in sqlite
-        Self::Ascending
-    }
 }
 
 impl TryFrom<u32> for SortOrder {
@@ -91,6 +86,7 @@ impl SortOrder {
 
 #[derive(
     Debug,
+    Default,
     Clone,
     Copy,
     PartialEq,
@@ -101,15 +97,10 @@ impl SortOrder {
     num_derive::FromPrimitive,
 )]
 pub enum TaskSort {
+    #[default]
     StartTime = 0,
     StopTime,
     TaskName,
-}
-
-impl Default for TaskSort {
-    fn default() -> Self {
-        Self::StartTime
-    }
 }
 
 impl TryFrom<u32> for TaskSort {
