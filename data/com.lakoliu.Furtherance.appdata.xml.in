@@ -39,6 +39,13 @@
   <content_rating type="oars-1.1" />
 
   <releases>
+    <release version="1.9.1" date="2026-11-25">
+        <description translatable="no">
+            <ul>
+            <li>GTK snapshot of application updated to modern Rust and libraries.</li>
+            </ul>
+        </description>
+    </release>
     <release version="1.8.3" date="2024-02-05">
       <description translatable="no">
         <ul>
@@ -174,4 +181,3 @@
   </releases>
 
 </component>
-
