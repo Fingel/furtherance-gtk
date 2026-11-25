@@ -17,7 +17,6 @@
 use adw::prelude::*;
 use adw::subclass::prelude::*;
 use gettextrs::*;
-use glib::clone;
 use gtk::glib;
 use gtk::CompositeTemplate;
 
@@ -252,7 +251,7 @@ impl FurPreferencesWindow {
         });
 
         imp.database_browse_btn
-            .connect_clicked(clone!(@weak self as this => move |_| {
+            .connect_clicked(glib::clone!(#[weak(rename_to = this)] self, move |_| {
                 let window = FurtheranceApplication::default().active_window().unwrap();
                 let dialog = gtk::FileChooserDialog::new(
                     Some(&gettext("Backup Database")),
@@ -273,7 +272,7 @@ impl FurPreferencesWindow {
                 dialog.set_current_name("furtherance.db");
 
                 dialog.connect_response(
-                    clone!(@strong dialog, @weak this as this2 => move |filechooser, resp| {
+                    glib::clone!(#[strong] dialog, #[weak(rename_to = this2)] this, move |filechooser, resp| {
                         if resp == gtk::ResponseType::Accept {
                             if let Some(path) = filechooser.file().and_then(|file| file.path()) {
                                 let path = &path.to_string_lossy();

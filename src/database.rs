@@ -17,7 +17,6 @@
 use chrono::{DateTime, Local};
 use directories::ProjectDirs;
 use gettextrs::*;
-use glib::clone;
 use gtk::glib;
 use gtk::prelude::*;
 use rusqlite::{backup, Connection, Result};
@@ -469,7 +468,7 @@ pub fn import_db(new_db: String) -> Result<()> {
             )),
         );
 
-        dialog.connect_response(clone!(@weak dialog = > move |_, _| {
+        dialog.connect_response(glib::clone!(#[weak] dialog, move |_, _| {
             dialog.close();
         }));
 

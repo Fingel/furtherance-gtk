@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use chrono::DateTime;
-use glib::clone;
 use gtk::subclass::prelude::*;
 use gtk::{gio, glib, prelude::*, CompositeTemplate};
 use once_cell::sync::Lazy;
@@ -93,7 +92,7 @@ impl FurTaskRow {
     fn setup_signals(&self) {
         let open_details_action = gio::SimpleAction::new("open-details", None);
 
-        open_details_action.connect_activate(clone!(@strong self as this => move |_, _| {
+        open_details_action.connect_activate(glib::clone!(#[strong(rename_to = this)] self, move |_, _| {
             let dialog = FurTaskDetails::new();
             dialog.setup_widgets(this.get_tasks());
             dialog.show();
@@ -125,7 +124,7 @@ impl FurTaskRow {
         // Create right-click gesture
         let gesture = gtk::GestureClick::new();
         gesture.set_button(gtk::gdk::ffi::GDK_BUTTON_SECONDARY as u32);
-        gesture.connect_pressed(clone!(@strong task_list => move |gesture, _, _, _| {
+        gesture.connect_pressed(glib::clone!(#[strong] task_list, move |gesture, _, _, _| {
             gesture.set_state(gtk::EventSequenceState::Claimed);
             let window = FurtheranceWindow::default();
             window.duplicate_task(task_list[0].clone());
@@ -134,7 +133,7 @@ impl FurTaskRow {
         self.add_controller(gesture);
 
         imp.restart_task_btn
-            .connect_clicked(clone!(@strong task_list => move |_| {
+            .connect_clicked(glib::clone!(#[strong] task_list, move |_| {
                 let window = FurtheranceWindow::default();
                 window.duplicate_task(task_list[0].clone());
             }));

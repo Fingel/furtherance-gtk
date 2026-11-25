@@ -17,7 +17,6 @@
 use adw::subclass::prelude::*;
 use chrono::{offset::TimeZone, DateTime, Duration, Local, NaiveDateTime, ParseError};
 use gettextrs::*;
-use glib::clone;
 use gtk::{glib, prelude::*, CompositeTemplate};
 use itertools::Itertools;
 
@@ -175,7 +174,7 @@ impl FurTaskDetails {
             imp.main_box.append(&task_box);
             imp.all_boxes.borrow_mut().push(task_box);
 
-            start.connect_clicked(clone!(@weak self as this => move |_|{
+            start.connect_clicked(glib::clone!(#[weak(rename_to = this)] self, move |_|{
                 let dialog = gtk::MessageDialog::new(
                     Some(&this),
                     gtk::DialogFlags::MODAL,
@@ -258,8 +257,8 @@ impl FurTaskDetails {
                 message_area.append(&delete_task_btn);
                 message_area.append(&vert_box);
 
-                delete_task_btn.connect_clicked(clone!(
-                    @strong task, @strong dialog, @weak this => move |_| {
+                delete_task_btn.connect_clicked(glib::clone!(
+                    #[strong] task, #[strong] dialog, #[weak] this, move |_| {
 
                     let delete_confirmation = gtk::MessageDialog::with_markup(
                         Some(&dialog),
@@ -271,9 +270,9 @@ impl FurTaskDetails {
                     let delete_btn = delete_confirmation.widget_for_response(gtk::ResponseType::Ok).unwrap();
                     delete_btn.add_css_class("destructive-action");
 
-                    delete_confirmation.connect_response(clone!(
-                        @strong dialog,
-                        @strong delete_confirmation => move |_, resp| {
+                    delete_confirmation.connect_response(glib::clone!(
+                        #[strong] dialog,
+                        #[strong] delete_confirmation, move |_, resp| {
                         if resp == gtk::ResponseType::Ok {
                             let _ = database::delete_by_id(task.id);
                             if task_group_len == 1 {
@@ -301,11 +300,11 @@ impl FurTaskDetails {
 
 
                 dialog.connect_response(
-                    clone!(@strong dialog,
-                        @strong task.task_name as name,
-                        @strong task.start_time as start_time,
-                        @strong task.stop_time as stop_time,
-                        @strong task.tags as tags => move |_ , resp| {
+                    glib::clone!(#[strong] dialog,
+                        #[strong(rename_to = name)] task.task_name,
+                        #[strong(rename_to = start_time)] task.start_time,
+                        #[strong(rename_to = stop_time)] task.stop_time,
+                        #[strong(rename_to = tags)] task.tags, move |_ , resp| {
                         if resp == gtk::ResponseType::Ok {
                             instructions.set_visible(false);
                             time_error.set_visible(false);
@@ -480,7 +479,7 @@ impl FurTaskDetails {
 
         // Add headerbar to dialog when scrolled far
         imp.scrolled_window.vadjustment().connect_value_notify(
-            clone!(@weak self as this => move |adj|{
+            glib::clone!(#[weak(rename_to = this)] self, move |adj|{
                 let imp = imp::FurTaskDetails::from_obj(&this);
                 if adj.value() < 120.0 {
                     imp.headerbar.add_css_class("hidden");
@@ -506,7 +505,7 @@ impl FurTaskDetails {
         });
 
         // Change all task names at once
-        imp.edit_task_names_btn.connect_clicked(clone!(@weak self as this => move|_| {
+        imp.edit_task_names_btn.connect_clicked(glib::clone!(#[weak(rename_to = this)] self, move|_| {
             let dialog = gtk::MessageDialog::new(
                 Some(&this),
                 gtk::DialogFlags::MODAL,
@@ -575,7 +574,7 @@ impl FurTaskDetails {
 
     fn setup_delete_all(&self) {
         let imp = imp::FurTaskDetails::from_obj(self);
-        imp.delete_all_btn.connect_clicked(clone!(@weak self as this => move |_|{
+        imp.delete_all_btn.connect_clicked(glib::clone!(#[weak(rename_to = this)] self, move |_|{
             let dialog = gtk::MessageDialog::with_markup(
                 Some(&this),
                 gtk::DialogFlags::MODAL,
@@ -591,7 +590,7 @@ impl FurTaskDetails {
             let delete_btn = dialog.widget_for_response(gtk::ResponseType::Accept).unwrap();
             delete_btn.add_css_class("destructive-action");
 
-            dialog.connect_response(clone!(@strong dialog => move |_,resp|{
+            dialog.connect_response(glib::clone!(#[strong] dialog, move |_,resp|{
                 if resp == gtk::ResponseType::Accept {
                     this.delete_all();
                     dialog.close();
@@ -614,7 +613,7 @@ impl FurTaskDetails {
 
     fn setup_add_similar(&self) {
         let imp = imp::FurTaskDetails::from_obj(self);
-        imp.add_similar_btn.connect_clicked(clone!(@weak self as this => move |_|{
+        imp.add_similar_btn.connect_clicked(glib::clone!(#[weak(rename_to = this)] self, move |_|{
             let imp2 = imp::FurTaskDetails::from_obj(&this);
             let dialog = gtk::MessageDialog::new(
                 Some(&this),
@@ -704,7 +703,7 @@ impl FurTaskDetails {
             vert_box.append(&name_error);
             message_area.append(&vert_box);
 
-            dialog.connect_response(clone!(@strong dialog => move |_ , resp| {
+            dialog.connect_response(glib::clone!(#[strong] dialog, move |_ , resp| {
                 if resp == gtk::ResponseType::Ok {
                     instructions.set_visible(false);
                     time_error.set_visible(false);

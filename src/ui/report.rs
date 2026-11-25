@@ -17,7 +17,6 @@
 use adw::subclass::prelude::*;
 use chrono::{offset::TimeZone, Date, DateTime, Datelike, Duration, Local, NaiveDate, Weekday};
 use gettextrs::*;
-use glib::clone;
 use gtk::{glib, prelude::*, CompositeTemplate};
 use itertools::Itertools;
 
@@ -121,7 +120,7 @@ impl FurReport {
         imp.filter_combo.set_active_id(Some("tasks_item"));
 
         imp.range_combo
-            .connect_changed(clone!(@weak self as this => move |combo|{
+            .connect_changed(glib::clone!(#[weak(rename_to = this)] self, move |combo|{
                 let imp = imp::FurReport::from_obj(&this);
                 if combo.active_id().unwrap() != "date_range_item" {
                     imp.date_range_box.set_visible(false);
@@ -132,7 +131,7 @@ impl FurReport {
             }));
 
         imp.filter_check
-            .connect_toggled(clone!(@weak self as this => move |_|{
+            .connect_toggled(glib::clone!(#[weak(rename_to = this)] self, move |_|{
                 let imp = imp::FurReport::from_obj(&this);
                 if imp.filter_box.get_visible() {
                     imp.filter_box.set_visible(false);
@@ -142,7 +141,7 @@ impl FurReport {
             }));
 
         imp.filter_combo
-            .connect_changed(clone!(@weak self as this => move |combo|{
+            .connect_changed(glib::clone!(#[weak(rename_to = this)] self, move |combo|{
                 let imp = imp::FurReport::from_obj(&this);
                 if combo.active_id().unwrap() == "tasks_item" {
                     imp.filter_entry.set_placeholder_text(Some(&gettext("Task, Task 2")));
@@ -152,7 +151,7 @@ impl FurReport {
             }));
 
         imp.refresh_btn
-            .connect_clicked(clone!(@weak self as this => move |_|{
+            .connect_clicked(glib::clone!(#[weak(rename_to = this)] self, move |_|{
                 this.refresh_report();
             }));
 

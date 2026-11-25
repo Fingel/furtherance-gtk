@@ -20,7 +20,7 @@ use chrono::{offset::TimeZone, DateTime, Duration as ChronDur, Local, NaiveDateT
 use dbus::blocking::Connection;
 use directories::ProjectDirs;
 use gettextrs::*;
-use glib::{clone, timeout_add_local, ControlFlow};
+use glib::{timeout_add_local, ControlFlow};
 use gtk::subclass::prelude::*;
 use gtk::{gio, glib, Application, CompositeTemplate};
 use itertools::Itertools;
@@ -214,7 +214,7 @@ impl FurtheranceWindow {
         let stop_time = Rc::new(RefCell::new(Local::now()));
 
         imp.task_input
-            .connect_changed(clone!(@weak self as this => move |task_input| {
+            .connect_changed(glib::clone!(#[weak(rename_to = this)] self, move |task_input| {
                 let imp2 = imp::FurtheranceWindow::from_obj(&this);
                 let task_input_text = task_input.text();
                 let mut split_tags: Vec<String> = task_input_text.split('#').map(|tag| String::from(tag.trim())).collect();
@@ -236,7 +236,7 @@ impl FurtheranceWindow {
                 }
             }));
 
-        imp.start_button.connect_clicked(clone!(@weak self as this => move |button| {
+        imp.start_button.connect_clicked(glib::clone!(#[weak(rename_to = this)] self, move |button| {
             let imp2 = imp::FurtheranceWindow::from_obj(&this);
             if !*imp2.running.lock().unwrap() {
                 // Remove auto-complete to prevent drop-down from sticking
@@ -255,7 +255,7 @@ impl FurtheranceWindow {
                     let timer_start = *start_time.borrow();
                     imp2.task_input.set_sensitive(false);
                     let duration = Duration::new(1,0);
-                    timeout_add_local(duration, clone!(@strong this as this_clone => move || {
+                    timeout_add_local(duration, glib::clone!(#[strong(rename_to = this_clone)] this, move || {
                         let imp3 = imp::FurtheranceWindow::from_obj(&this_clone);
                         if *imp3.running.lock().unwrap() {
                             secs -= 1;
@@ -323,7 +323,7 @@ impl FurtheranceWindow {
                     imp2.task_input.set_sensitive(false);
                     let autosave_start = *start_time.borrow();
                     let duration = Duration::new(1,0);
-                    timeout_add_local(duration, clone!(@strong this as this_clone => move || {
+                    timeout_add_local(duration, glib::clone!(#[strong(rename_to = this_clone)] this, move || {
                         let imp3 = imp::FurtheranceWindow::from_obj(&this_clone);
                         if *imp3.running.lock().unwrap() {
                             secs += 1;
@@ -376,7 +376,7 @@ impl FurtheranceWindow {
             }
         }));
 
-        imp.add_task.connect_clicked(clone!(@weak self as this => move |_| {
+        imp.add_task.connect_clicked(glib::clone!(#[weak(rename_to = this)] self, move |_| {
             let dialog = gtk::MessageDialog::new(
                 Some(&this),
                 gtk::DialogFlags::MODAL,
@@ -463,7 +463,7 @@ impl FurtheranceWindow {
             vert_box.append(&name_error);
             message_area.append(&vert_box);
 
-            dialog.connect_response(clone!(@strong dialog => move |_ , resp| {
+            dialog.connect_response(glib::clone!(#[strong] dialog, move |_ , resp| {
                 if resp == gtk::ResponseType::Ok {
                     instructions.set_visible(false);
                     time_error.set_visible(false);
@@ -669,10 +669,10 @@ impl FurtheranceWindow {
         ]);
         dialog.set_secondary_text(Some(&idle_time_msg));
 
-        dialog.connect_response(clone!(
-            @weak self as this,
-            @strong dialog,
-            @strong imp.start_button as start_button => move |_, resp| {
+        dialog.connect_response(glib::clone!(
+            #[weak(rename_to = this)] self,
+            #[strong] dialog,
+            #[strong(rename_to = start_button)] imp.start_button, move |_, resp| {
             if resp == gtk::ResponseType::Reject {
                 this.set_subtract_idle(true);
                 start_button.emit_clicked();
@@ -708,9 +708,9 @@ impl FurtheranceWindow {
 
         let app = FurtheranceApplication::default();
         app.system_pomodoro_notification(dialog.clone());
-        dialog.connect_response(clone!(
-            @weak self as this,
-            @strong dialog => move |_, resp| {
+        dialog.connect_response(glib::clone!(
+            #[weak(rename_to = this)] self,
+            #[strong] dialog, move |_, resp| {
             let imp = imp::FurtheranceWindow::from_obj(&this);
             if resp == gtk::ResponseType::Reject {
                 imp.start_button.set_icon_name("media-playback-start-symbolic");
@@ -803,9 +803,9 @@ impl FurtheranceWindow {
                 "Furtherance shut down improperly. An autosave was restored.",
             )));
 
-            dialog.connect_response(clone!(
-                @weak self as this,
-                @strong dialog => move |_, resp| {
+            dialog.connect_response(glib::clone!(
+                #[weak(rename_to = this)] self,
+                #[strong] dialog, move |_, resp| {
                 if resp == gtk::ResponseType::Ok {
                     this.reset_history_box();
                     dialog.close();
@@ -953,14 +953,14 @@ impl FurtheranceWindow {
         filechooser.set_current_name("data.csv");
 
         filechooser_button.connect_clicked(
-            clone!(@weak self as window, @weak filechooser, @weak dialog => move |_| {
+            glib::clone!(#[weak(rename_to = window)] self, #[weak] filechooser, #[weak] dialog, move |_| {
                 dialog.hide();
                 filechooser.show();
             }),
         );
 
         filechooser.connect_response(
-            clone!(@weak dialog, @weak chosenfile_label => move |filechooser, response| {
+            glib::clone!(#[weak] dialog, #[weak] chosenfile_label, move |filechooser, response| {
                 if response == gtk::ResponseType::Accept {
                     if let Some(path) = filechooser.file().and_then(|file| file.path()) {
                         chosenfile_label.set_label(&path.to_string_lossy());
@@ -973,14 +973,14 @@ impl FurtheranceWindow {
             }),
         );
 
-        dialog.connect_response(clone!(@weak self as window, @weak filechooser, @weak tasksort_row, @weak sortorder_row => move |dialog, response| {
+        dialog.connect_response(glib::clone!(#[weak(rename_to = window)] self, #[weak] filechooser, #[weak] tasksort_row, #[weak] sortorder_row, move |dialog, response| {
             match response {
                 gtk::ResponseType::Apply => {
                     let sort = TaskSort::try_from(tasksort_row.selected()).unwrap_or_default();
                     let order = SortOrder::try_from(sortorder_row.selected()).unwrap_or_default();
 
                     if let Some(file) = filechooser.file() {
-                        glib::MainContext::default().spawn_local(clone!(@strong window, @strong file => async move {
+                        glib::MainContext::default().spawn_local(glib::clone!(#[strong] window, #[strong] file, async move {
                             if let Err(e) = FurtheranceWindow::export_csv_to_file(sort, order, &file).await {
                                 log::error!("replace file {:?} failed, Err {}", file, e);
                                 window.display_toast(&gettext("Exporting as CSV failed."));

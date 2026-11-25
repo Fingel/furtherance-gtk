@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use gettextrs::*;
-use glib::clone;
 use gtk::prelude::*;
 use gtk::subclass::prelude::*;
 use gtk::{gdk, gio, glib};
@@ -110,39 +109,39 @@ impl FurtheranceApplication {
 
     fn setup_gactions(&self) {
         let quit_action = gio::SimpleAction::new("quit", None);
-        quit_action.connect_activate(clone!(@weak self as app => move |_, _| {
+        quit_action.connect_activate(glib::clone!(#[weak(rename_to = app)] self, move |_, _| {
             app.quit();
         }));
         self.add_action(&quit_action);
 
         let preferences_action = gio::SimpleAction::new("preferences", None);
-        preferences_action.connect_activate(clone!(@weak self as app => move |_, _| {
+        preferences_action.connect_activate(glib::clone!(#[weak(rename_to = app)] self, move |_, _| {
             FurPreferencesWindow::new().show();
         }));
         self.set_accels_for_action("app.preferences", &["<primary>comma"]);
         self.add_action(&preferences_action);
 
         let report_action = gio::SimpleAction::new("report", None);
-        report_action.connect_activate(clone!(@weak self as app => move |_, _| {
+        report_action.connect_activate(glib::clone!(#[weak(rename_to = app)] self, move |_, _| {
             FurReport::new().show();
         }));
         self.set_accels_for_action("app.report", &["<primary>R"]);
         self.add_action(&report_action);
 
         let about_action = gio::SimpleAction::new("about", None);
-        about_action.connect_activate(clone!(@weak self as app => move |_, _| {
+        about_action.connect_activate(glib::clone!(#[weak(rename_to = app)] self, move |_, _| {
             app.show_about();
         }));
         self.add_action(&about_action);
 
         let import_database_action = gio::SimpleAction::new("import-database", None);
-        import_database_action.connect_activate(clone!(@weak self as app => move |_, _| {
+        import_database_action.connect_activate(glib::clone!(#[weak(rename_to = app)] self, move |_, _| {
             app.import_database();
         }));
         self.add_action(&import_database_action);
 
         let discard_idle_action = gio::SimpleAction::new("discard-idle-action", None);
-        discard_idle_action.connect_activate(clone!(@weak self as app => move |_, _| {
+        discard_idle_action.connect_activate(glib::clone!(#[weak(rename_to = app)] self, move |_, _| {
             let window = FurtheranceWindow::default();
             let imp = window.imp();
             if *imp.running.lock().unwrap() && *imp.idle_time_reached.lock().unwrap() {
@@ -152,7 +151,7 @@ impl FurtheranceApplication {
         self.add_action(&discard_idle_action);
 
         let continue_idle_action = gio::SimpleAction::new("continue-idle-action", None);
-        continue_idle_action.connect_activate(clone!(@weak self as app => move |_, _| {
+        continue_idle_action.connect_activate(glib::clone!(#[weak(rename_to = app)] self, move |_, _| {
             let window = FurtheranceWindow::default();
             if *window.imp().running.lock().unwrap() {
                 window.imp().idle_dialog.lock().unwrap().response(gtk::ResponseType::Accept);
@@ -161,14 +160,14 @@ impl FurtheranceApplication {
         self.add_action(&continue_idle_action);
 
         let continue_pomodoro_action = gio::SimpleAction::new("continue-pomodoro-action", None);
-        continue_pomodoro_action.connect_activate(clone!(@weak self as app => move |_, _| {
+        continue_pomodoro_action.connect_activate(glib::clone!(#[weak(rename_to = app)] self, move |_, _| {
             let imp = imp::FurtheranceApplication::from_obj(&app);
             imp.pomodoro_dialog.lock().unwrap().response(gtk::ResponseType::Accept);
         }));
         self.add_action(&continue_pomodoro_action);
 
         let stop_pomodoro_action = gio::SimpleAction::new("stop-pomodoro-action", None);
-        stop_pomodoro_action.connect_activate(clone!(@weak self as app => move |_, _| {
+        stop_pomodoro_action.connect_activate(glib::clone!(#[weak(rename_to = app)] self, move |_, _| {
             let imp = imp::FurtheranceApplication::from_obj(&app);
             imp.pomodoro_dialog.lock().unwrap().response(gtk::ResponseType::Reject);
         }));
@@ -233,7 +232,7 @@ impl FurtheranceApplication {
         message_area.append(&instructions);
         message_area.append(&delete_entry);
 
-        dialog.connect_response(clone!(@weak dialog = > move |_, resp| {
+        dialog.connect_response(glib::clone!(#[weak] dialog, move |_, resp| {
             if resp == gtk::ResponseType::Accept {
                 if delete_entry.text().to_uppercase() == gettext("DELETE") {
                     let _ = database::delete_all();
@@ -251,7 +250,7 @@ impl FurtheranceApplication {
     pub fn delete_enabled(&self, enabled: bool) {
         if enabled {
             let delete_history_action = gio::SimpleAction::new("delete-history", None);
-            delete_history_action.connect_activate(clone!(@weak self as app => move |_, _| {
+            delete_history_action.connect_activate(glib::clone!(#[weak(rename_to = app)] self, move |_, _| {
                 app.delete_history();
             }));
             self.add_action(&delete_history_action);
@@ -263,7 +262,7 @@ impl FurtheranceApplication {
     pub fn export_csv_enabled(&self, enabled: bool) {
         if enabled {
             let export_csv_action = gio::SimpleAction::new("export-csv", None);
-            export_csv_action.connect_activate(clone!(@weak self as app => move |_, _| {
+            export_csv_action.connect_activate(glib::clone!(#[weak(rename_to = app)] self, move |_, _| {
                 let window = FurtheranceWindow::default();
                 window.open_csv_export_dialog();
             }));
@@ -276,7 +275,7 @@ impl FurtheranceApplication {
     pub fn backup_database_enabled(&self, enabled: bool) {
         if enabled {
             let backup_database_action = gio::SimpleAction::new("backup-database", None);
-            backup_database_action.connect_activate(clone!(@weak self as app => move |_, _| {
+            backup_database_action.connect_activate(glib::clone!(#[weak(rename_to = app)] self, move |_, _| {
                 app.backup_database();
             }));
             self.add_action(&backup_database_action);
@@ -362,7 +361,7 @@ impl FurtheranceApplication {
         dialog.set_current_name("furtherance_bkup.db");
 
         dialog.connect_response(
-            clone!(@strong dialog, @weak self as this => move |filechooser, resp| {
+            glib::clone!(#[strong] dialog, #[weak(rename_to = this)] self, move |filechooser, resp| {
                 if resp == gtk::ResponseType::Accept {
                     if let Some(path) = filechooser.file().and_then(|file| file.path()) {
                         let path = &path.to_string_lossy();
@@ -398,7 +397,7 @@ impl FurtheranceApplication {
         dialog.add_filter(&filter);
 
         dialog.connect_response(
-            clone!(@strong dialog, @weak self as this => move |filechooser, resp| {
+            glib::clone!(#[strong] dialog, #[weak(rename_to = this)] self, move |filechooser, resp| {
                 if resp == gtk::ResponseType::Accept {
                     if let Some(path) = filechooser.file().and_then(|file| file.path()) {
                         let path = &path.to_string_lossy();
