@@ -522,7 +522,7 @@ impl FurTaskDetails {
         imp.all_task_ids.borrow_mut().clear();
         let window = FurtheranceWindow::default();
         window.reset_history_box();
-        if updated_list.len() > 0 {
+        if !updated_list.is_empty() {
             self.setup_widgets(updated_list);
         } else {
             self.close();

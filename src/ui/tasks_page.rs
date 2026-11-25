@@ -80,7 +80,7 @@ impl FurTasksPage {
 
     pub fn add_to_todays_time(&self, added_time: i32) {
         let imp = imp::FurTasksPage::from_obj(self);
-        if imp.all_groups.borrow().len() > 0 {
+        if !imp.all_groups.borrow().is_empty() {
             let today_group = imp.all_groups.borrow()[0].clone();
             if today_group.title() == "Today" {
                 // Add the time to the thing here
@@ -162,7 +162,7 @@ impl FurTasksPage {
             i += 1;
             if settings_manager::get_bool("limit-tasks") {
                 if uniq_date_list.len() > settings_manager::get_int("limit-days") as usize {
-                    if same_date_list.len() > 0 && i != len {
+                    if !same_date_list.is_empty() && i != len {
                         tasks_sorted_by_day.push(same_date_list.clone());
                     }
                     uniq_date_list.pop();
