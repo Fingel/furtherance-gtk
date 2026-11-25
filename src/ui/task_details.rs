@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use adw::subclass::prelude::*;
-use chrono::{offset::TimeZone, DateTime, Duration, Local, NaiveDateTime, ParseError};
+use chrono::{offset::TimeZone, DateTime, Duration, Local, NaiveDateTime};
 use gettextrs::*;
 use gtk::{glib, prelude::*, CompositeTemplate};
 use itertools::Itertools;

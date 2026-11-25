@@ -16,7 +16,7 @@
 
 use adw::prelude::*;
 use adw::subclass::prelude::AdwApplicationWindowImpl;
-use chrono::{offset::TimeZone, DateTime, Duration as ChronDur, Local, NaiveDateTime, ParseError};
+use chrono::{offset::TimeZone, DateTime, Duration as ChronDur, Local, NaiveDateTime};
 use dbus::blocking::Connection;
 use directories::ProjectDirs;
 use gettextrs::*;
