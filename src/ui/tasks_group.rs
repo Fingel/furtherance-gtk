@@ -71,7 +71,7 @@ impl FurTasksGroup {
     }
 
     pub fn add_task_model(&self, tasks: Vec<database::Task>) {
-        let imp = imp::FurTasksGroup::from_obj(&self);
+        let imp = imp::FurTasksGroup::from_obj(self);
 
         let listbox = gtk::ListBox::new();
         listbox.add_css_class("content");
@@ -115,7 +115,7 @@ impl FurTasksGroup {
     }
 
     pub fn get_total_day_time(&self) -> i64 {
-        let imp = imp::FurTasksGroup::from_obj(&self);
+        let imp = imp::FurTasksGroup::from_obj(self);
         *imp.day_total_time.borrow()
     }
 }

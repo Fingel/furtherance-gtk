@@ -189,7 +189,7 @@ pub fn db_write(
 
     conn.execute(
         "INSERT INTO tasks (task_name, start_time, stop_time, tags) values (?1, ?2, ?3, ?4)",
-        &[
+        [
             &task_name.to_string(),
             &start_time.to_rfc3339(),
             &stop_time.to_rfc3339(),
@@ -211,7 +211,7 @@ pub fn write_autosave(
 
     conn.execute(
         "INSERT INTO tasks (task_name, start_time, stop_time, tags) values (?1, ?2, ?3, ?4)",
-        &[&task_name, &start_time, &stop_time, &tags],
+        [&task_name, &start_time, &stop_time, &tags],
     )?;
 
     Ok(())
@@ -289,7 +289,7 @@ pub fn update_start_time(id: i32, start_time: String) -> Result<()> {
 
     conn.execute(
         "UPDATE tasks SET start_time = (?1) WHERE id = (?2)",
-        &[&start_time, &id.to_string()],
+        [&start_time, &id.to_string()],
     )?;
 
     Ok(())
@@ -300,7 +300,7 @@ pub fn update_stop_time(id: i32, stop_time: String) -> Result<()> {
 
     conn.execute(
         "UPDATE tasks SET stop_time = (?1) WHERE id = (?2)",
-        &[&stop_time, &id.to_string()],
+        [&stop_time, &id.to_string()],
     )?;
 
     Ok(())
@@ -311,7 +311,7 @@ pub fn update_task_name(id: i32, task_name: String) -> Result<()> {
 
     conn.execute(
         "UPDATE tasks SET task_name = (?1) WHERE id = (?2)",
-        &[&task_name, &id.to_string()],
+        [&task_name, &id.to_string()],
     )?;
 
     Ok(())
@@ -322,7 +322,7 @@ pub fn update_tags(id: i32, tags: String) -> Result<()> {
 
     conn.execute(
         "UPDATE tasks SET tags = (?1) WHERE id = (?2)",
-        &[&tags, &id.to_string()],
+        [&tags, &id.to_string()],
     )?;
 
     Ok(())
@@ -414,7 +414,7 @@ pub fn delete_by_ids(id_list: Vec<i32>) -> Result<()> {
     let conn = Connection::open(get_directory())?;
 
     for id in id_list {
-        conn.execute("delete FROM tasks WHERE id = (?1)", &[&id.to_string()])?;
+        conn.execute("delete FROM tasks WHERE id = (?1)", [&id.to_string()])?;
     }
 
     Ok(())
@@ -423,7 +423,7 @@ pub fn delete_by_ids(id_list: Vec<i32>) -> Result<()> {
 pub fn delete_by_id(id: i32) -> Result<()> {
     let conn = Connection::open(get_directory())?;
 
-    conn.execute("delete FROM tasks WHERE id = (?1)", &[&id.to_string()])?;
+    conn.execute("delete FROM tasks WHERE id = (?1)", [&id.to_string()])?;
 
     Ok(())
 }
@@ -464,7 +464,7 @@ pub fn import_db(new_db: String) -> Result<()> {
             gtk::ButtonsType::Ok,
             Some(&format!(
                 "<span size='large' weight='bold'>{}</span>",
-                &gettext("Not a valid database")
+                gettext("Not a valid database")
             )),
         );
 

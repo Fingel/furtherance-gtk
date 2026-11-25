@@ -285,10 +285,10 @@ impl FurPreferencesWindow {
                                 let _bkup = database::backup_db(path.to_string());
 
                                 let settings = settings_manager::get_settings();
-                                let _ = settings.set_string("database-loc", &path.to_string());
+                                let _ = settings.set_string("database-loc", path.as_ref());
 
                                 let imp2 = imp::FurPreferencesWindow::from_obj(&this2);
-                                imp2.database_loc_row.set_subtitle(&path.to_string());
+                                imp2.database_loc_row.set_subtitle(path.as_ref());
 
                                 let window = FurtheranceWindow::default();
                                 window.reset_history_box();

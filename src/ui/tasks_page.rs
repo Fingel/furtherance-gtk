@@ -79,7 +79,7 @@ impl FurTasksPage {
     }
 
     pub fn add_to_todays_time(&self, added_time: i32) {
-        let imp = imp::FurTasksPage::from_obj(&self);
+        let imp = imp::FurTasksPage::from_obj(self);
         if imp.all_groups.borrow().len() > 0 {
             let today_group = imp.all_groups.borrow()[0].clone();
             if today_group.title() == "Today" {
@@ -102,13 +102,13 @@ impl FurTasksPage {
     }
 
     pub fn set_todays_stored_secs(&self, new_time: i32) {
-        let imp = imp::FurTasksPage::from_obj(&self);
+        let imp = imp::FurTasksPage::from_obj(self);
         let old_time = *imp.today_stored_secs.lock().unwrap();
         *imp.today_stored_secs.lock().unwrap() = old_time + new_time;
     }
 
     pub fn clear_task_list(&self) {
-        let imp = imp::FurTasksPage::from_obj(&self);
+        let imp = imp::FurTasksPage::from_obj(self);
 
         for group in &*imp.all_groups.borrow() {
             self.remove(group);
@@ -119,7 +119,7 @@ impl FurTasksPage {
     }
 
     pub fn build_task_list(&self) {
-        let imp = imp::FurTasksPage::from_obj(&self);
+        let imp = imp::FurTasksPage::from_obj(self);
 
         let user_locale = env::var("LANG")
             .ok()

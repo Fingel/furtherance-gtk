@@ -243,7 +243,7 @@ impl FurtheranceApplication {
             gtk::ButtonsType::None,
             Some(&format!(
                 "<span size='x-large' weight='bold'>{}</span>",
-                &gettext("Delete history?")
+                gettext("Delete history?")
             )),
         );
         dialog.add_buttons(&[
@@ -347,8 +347,8 @@ impl FurtheranceApplication {
 
     pub fn system_idle_notification(&self, title: &str, subtitle: &str) {
         let icon = Some("appointment-missed-symbolic");
-        let notification = gio::Notification::new(title.as_ref());
-        notification.set_body(Some(subtitle.as_ref()));
+        let notification = gio::Notification::new(title);
+        notification.set_body(Some(subtitle));
 
         if let Some(icon) = icon {
             match gio::Icon::for_string(icon) {

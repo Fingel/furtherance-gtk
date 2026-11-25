@@ -425,9 +425,9 @@ impl FurtheranceWindow {
                     gtk::DialogFlags::MODAL,
                     gtk::MessageType::Question,
                     gtk::ButtonsType::None,
-                    &format!(
+                    format!(
                         "<span size='x-large' weight='bold'>{}</span>",
-                        &gettext("New Task")
+                        gettext("New Task")
                     ),
                 );
                 dialog.set_use_markup(true);
@@ -441,7 +441,7 @@ impl FurtheranceWindow {
                 let task_name_edit = gtk::Entry::new();
                 task_name_edit.set_placeholder_text(Some(&gettext("Task Name")));
                 let task_tags_edit = gtk::Entry::new();
-                let tags_placeholder = format!("#{}", &gettext("tags"));
+                let tags_placeholder = format!("#{}", gettext("tags"));
                 task_tags_edit.set_placeholder_text(Some(&tags_placeholder));
 
                 let labels_box = gtk::Box::new(gtk::Orientation::Horizontal, 5);
@@ -722,7 +722,7 @@ impl FurtheranceWindow {
             gtk::ButtonsType::None,
             Some(&format!(
                 "<span size='x-large' weight='bold'>{}</span>",
-                &gettext("Idle")
+                gettext("Idle")
             )),
         );
         dialog.add_buttons(&[
@@ -765,7 +765,7 @@ impl FurtheranceWindow {
             gtk::ButtonsType::None,
             Some(&format!(
                 "<span size='x-large' weight='bold'>{}</span>",
-                &gettext("Time's up!")
+                gettext("Time's up!")
             )),
         );
         dialog.add_buttons(&[
@@ -869,7 +869,7 @@ impl FurtheranceWindow {
                 gtk::DialogFlags::MODAL,
                 gtk::MessageType::Info,
                 gtk::ButtonsType::Ok,
-                &gettext("Autosave Restored"),
+                gettext("Autosave Restored"),
             );
             dialog.set_secondary_text(Some(&gettext(
                 "Furtherance shut down improperly. An autosave was restored.",
@@ -1016,12 +1016,12 @@ impl FurtheranceWindow {
         filefilter.add_pattern("*.csv");
 
         let filechooser = gtk::FileChooserNative::builder()
-            .title(&gettext("Create or choose a CSV file"))
+            .title(gettext("Create or choose a CSV file"))
             .modal(true)
             .transient_for(self)
             .action(gtk::FileChooserAction::Save)
-            .accept_label(&gettext("Accept"))
-            .cancel_label(&gettext("Cancel"))
+            .accept_label(gettext("Accept"))
+            .cancel_label(gettext("Cancel"))
             .select_multiple(false)
             .filter(&filefilter)
             .build();

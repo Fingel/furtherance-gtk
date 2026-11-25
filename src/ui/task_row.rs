@@ -108,7 +108,7 @@ impl FurTaskRow {
     }
 
     pub fn set_row_labels(&self, task_list: Vec<Task>) {
-        let imp = imp::FurTaskRow::from_obj(&self);
+        let imp = imp::FurTaskRow::from_obj(self);
         for task in task_list.clone() {
             imp.tasks.lock().unwrap().push(task);
         }
@@ -171,12 +171,12 @@ impl FurTaskRow {
     }
 
     pub fn get_tasks(&self) -> Vec<Task> {
-        let imp = imp::FurTaskRow::from_obj(&self);
+        let imp = imp::FurTaskRow::from_obj(self);
         imp.tasks.lock().unwrap().to_vec()
     }
 
     pub fn get_total_time(&self) -> i64 {
-        let imp = imp::FurTaskRow::from_obj(&self);
+        let imp = imp::FurTaskRow::from_obj(self);
         *imp.total_time.borrow()
     }
 }

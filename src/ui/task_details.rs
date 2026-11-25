@@ -183,9 +183,9 @@ impl FurTaskDetails {
                         gtk::DialogFlags::MODAL,
                         gtk::MessageType::Question,
                         gtk::ButtonsType::OkCancel,
-                        &format!(
+                        format!(
                             "<span size='x-large' weight='bold'>{}</span>",
-                            &gettext("Edit Task")
+                            gettext("Edit Task")
                         ),
                     );
                     dialog.set_use_markup(true);
@@ -195,7 +195,7 @@ impl FurTaskDetails {
                     let task_name_edit = gtk::Entry::new();
                     task_name_edit.set_text(&task.task_name);
                     let task_tags_edit = gtk::Entry::new();
-                    let tags_placeholder = format!("#{}", &gettext("Tags"));
+                    let tags_placeholder = format!("#{}", gettext("Tags"));
                     task_tags_edit.set_placeholder_text(Some(&tags_placeholder));
                     let mut task_tags: String = task.tags.clone();
                     if !task.tags.trim().is_empty() {
@@ -279,7 +279,7 @@ impl FurTaskDetails {
                                 gtk::ButtonsType::OkCancel,
                                 Some(&format!(
                                     "<span size='x-large' weight='bold'>{}</span>",
-                                    &gettext("Delete task?")
+                                    gettext("Delete task?")
                                 )),
                             );
                             let delete_btn = delete_confirmation
@@ -496,7 +496,7 @@ impl FurTaskDetails {
     }
 
     fn clear_task_list(&self) {
-        let imp = imp::FurTaskDetails::from_obj(&self);
+        let imp = imp::FurTaskDetails::from_obj(self);
 
         for task_box in &*imp.all_boxes.borrow() {
             imp.main_box.remove(task_box);
@@ -578,9 +578,9 @@ impl FurTaskDetails {
                     gtk::DialogFlags::MODAL,
                     gtk::MessageType::Question,
                     gtk::ButtonsType::OkCancel,
-                    &format!(
+                    format!(
                         "<span size='x-large' weight='bold'>{}</span>",
-                        &gettext("Edit Task")
+                        gettext("Edit Task")
                     ),
                 );
                 dialog.set_use_markup(true);
@@ -657,7 +657,7 @@ impl FurTaskDetails {
                     gtk::ButtonsType::None,
                     Some(&format!(
                         "<span size='large'>{}</span>",
-                        &gettext("Delete All?")
+                        gettext("Delete All?")
                     )),
                 );
                 dialog.set_secondary_text(Some(&gettext(
@@ -709,9 +709,9 @@ impl FurTaskDetails {
                     gtk::DialogFlags::MODAL,
                     gtk::MessageType::Question,
                     gtk::ButtonsType::None,
-                    &format!(
+                    format!(
                         "<span size='x-large' weight='bold'>{}</span>",
-                        &gettext("New Task")
+                        gettext("New Task")
                     ),
                 );
                 dialog.set_use_markup(true);
