@@ -2,7 +2,7 @@
 name = "furtherance"
 version = "1.8.3"
 authors = ["Ricky Kresslein <ricky@unobserved.io>"]
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 anyhow = "1.0"

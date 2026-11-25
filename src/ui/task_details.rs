@@ -15,15 +15,15 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use adw::subclass::prelude::*;
-use chrono::{offset::TimeZone, DateTime, Duration, Local, NaiveDateTime};
+use chrono::{DateTime, Duration, Local, NaiveDateTime, offset::TimeZone};
 use gettextrs::*;
-use gtk::{glib, prelude::*, CompositeTemplate};
+use gtk::{CompositeTemplate, glib, prelude::*};
 use itertools::Itertools;
 
+use crate::FurtheranceApplication;
 use crate::database;
 use crate::settings_manager;
 use crate::ui::FurtheranceWindow;
-use crate::FurtheranceApplication;
 
 mod imp {
     use super::*;
@@ -509,14 +509,11 @@ impl FurTaskDetails {
         // Check if dates in all_task_ids list match this date
         // and if not, delete them.
         updated_list.retain(|task| {
-            let delete = {
-                let start_time = DateTime::parse_from_rfc3339(&task.start_time).unwrap();
-                let start_time_str = start_time.format("%F").to_string();
-                imp.this_day.borrow().to_string() == start_time_str
-                    && imp.task_name_label.text() == task.task_name
-                    && imp.orig_tags.borrow().to_string() == task.tags
-            };
-            delete
+            let start_time = DateTime::parse_from_rfc3339(&task.start_time).unwrap();
+            let start_time_str = start_time.format("%F").to_string();
+            imp.this_day.borrow().to_string() == start_time_str
+                && imp.task_name_label.text() == task.task_name
+                && imp.orig_tags.borrow().to_string() == task.tags
         });
 
         imp.all_task_ids.borrow_mut().clear();
