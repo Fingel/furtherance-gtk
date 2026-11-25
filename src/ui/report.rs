@@ -319,21 +319,16 @@ impl FurReport {
             }
         }
 
-        let all_tasks_iter: gtk::TreeIter;
-        if tasks_in_range.is_empty() {
-            all_tasks_iter = results_model.insert_with_values(
-                None,
-                None,
-                &[(0, &gettext("No Results")), (1, &"")],
-            );
+        let all_tasks_iter = if tasks_in_range.is_empty() {
+            results_model.insert_with_values(None, None, &[(0, &gettext("No Results")), (1, &"")])
         } else {
             let total_time_str = FurReport::format_duration(total_time);
-            all_tasks_iter = results_model.insert_with_values(
+            results_model.insert_with_values(
                 None,
                 None,
                 &[(0, &gettext("All Results")), (1, &total_time_str)],
-            );
-        }
+            )
+        };
 
         if imp.sort_by_task.is_active() {
             let mut tasks_by_name: Vec<Vec<(database::Task, i64)>> = Vec::new();

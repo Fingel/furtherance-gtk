@@ -526,18 +526,14 @@ impl FurtheranceWindow {
 
                             // Start Time
                             let new_start_time_str = start_time_edit.text();
-                            let new_start_time: Result<NaiveDateTime, ParseError>;
-                            if settings_manager::get_bool("show-seconds") {
-                                new_start_time = NaiveDateTime::parse_from_str(
-                                    &new_start_time_str,
-                                    time_formatter,
-                                );
+                            let new_start_time = if settings_manager::get_bool("show-seconds") {
+                                NaiveDateTime::parse_from_str(&new_start_time_str, time_formatter)
                             } else {
-                                new_start_time = NaiveDateTime::parse_from_str(
+                                NaiveDateTime::parse_from_str(
                                     &new_start_time_str,
                                     time_formatter_no_secs,
-                                );
-                            }
+                                )
+                            };
                             if let Err(_) = new_start_time {
                                 instructions.set_visible(true);
                                 do_not_close = true;
@@ -552,18 +548,14 @@ impl FurtheranceWindow {
 
                             // Stop Time
                             let new_stop_time_str = stop_time_edit.text();
-                            let new_stop_time: Result<NaiveDateTime, ParseError>;
-                            if settings_manager::get_bool("show-seconds") {
-                                new_stop_time = NaiveDateTime::parse_from_str(
-                                    &new_stop_time_str,
-                                    time_formatter,
-                                );
+                            let new_stop_time = if settings_manager::get_bool("show-seconds") {
+                                NaiveDateTime::parse_from_str(&new_stop_time_str, time_formatter)
                             } else {
-                                new_stop_time = NaiveDateTime::parse_from_str(
+                                NaiveDateTime::parse_from_str(
                                     &new_stop_time_str,
                                     time_formatter_no_secs,
-                                );
-                            }
+                                )
+                            };
                             if new_stop_time.is_err() {
                                 instructions.set_visible(true);
                                 do_not_close = true;
@@ -930,12 +922,11 @@ impl FurtheranceWindow {
     pub fn duplicate_task(&self, task: database::Task) {
         let imp = imp::FurtheranceWindow::from_obj(self);
         if !*imp.running.lock().unwrap() {
-            let task_text: String;
-            if task.tags.trim().is_empty() {
-                task_text = task.task_name;
+            let task_text = if task.tags.trim().is_empty() {
+                task.task_name
             } else {
-                task_text = format!("{} #{}", task.task_name, task.tags);
-            }
+                format!("{} #{}", task.task_name, task.tags)
+            };
             imp.task_input.set_text(&task_text);
             imp.start_button.emit_clicked();
         } else {
