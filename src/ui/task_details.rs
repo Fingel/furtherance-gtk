@@ -512,14 +512,9 @@ impl FurTaskDetails {
             let delete = {
                 let start_time = DateTime::parse_from_rfc3339(&task.start_time).unwrap();
                 let start_time_str = start_time.format("%F").to_string();
-                if imp.this_day.borrow().to_string() != start_time_str
-                    || imp.task_name_label.text() != task.task_name
-                    || imp.orig_tags.borrow().to_string() != task.tags
-                {
-                    false
-                } else {
-                    true
-                }
+                imp.this_day.borrow().to_string() == start_time_str
+                    && imp.task_name_label.text() == task.task_name
+                    && imp.orig_tags.borrow().to_string() == task.tags
             };
             delete
         });
