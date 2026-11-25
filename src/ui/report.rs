@@ -334,10 +334,10 @@ impl FurReport {
             let mut tasks_by_name: Vec<Vec<(database::Task, i64)>> = Vec::new();
             for (task, task_duration) in tasks_in_range {
                 let mut unique = true;
-                for i in 0..tasks_by_name.len() {
-                    let (tbn, _) = &tasks_by_name[i][0];
+                for task_vec in &mut tasks_by_name {
+                    let (tbn, _) = &task_vec[0];
                     if tbn.task_name == task.task_name {
-                        tasks_by_name[i].push((task.clone(), task_duration));
+                        task_vec.push((task.clone(), task_duration));
                         unique = false;
                     }
                 }
@@ -365,11 +365,9 @@ impl FurReport {
                         let mut formatted_tags = split_tags.join(" #");
                         formatted_tags = format!("#{}", formatted_tags);
                         let mut unique = true;
-                        for i in 0..tags_dur.len() {
-                            let (tags, dur) = &tags_dur[i];
+                        for (tags, dur) in &mut tags_dur {
                             if tags == &formatted_tags {
-                                let new_dur = dur + task_duration;
-                                tags_dur[i] = (formatted_tags.clone(), new_dur);
+                                *dur += task_duration;
                                 unique = false;
                             }
                         }
@@ -409,10 +407,10 @@ impl FurReport {
                 split_tags = split_tags.iter().map(|x| x.trim()).collect();
                 for tag in split_tags {
                     let mut unique = true;
-                    for i in 0..tasks_by_tag.len() {
-                        let (tbt_tag, _, _) = &tasks_by_tag[i][0];
+                    for tag_vec in &mut tasks_by_tag {
+                        let (tbt_tag, _, _) = &tag_vec[0];
                         if tbt_tag == tag {
-                            tasks_by_tag[i].push((tag.to_string(), task.clone(), task_duration));
+                            tag_vec.push((tag.to_string(), task.clone(), task_duration));
                             unique = false;
                         }
                     }
@@ -435,11 +433,9 @@ impl FurReport {
                     total_duration += tag_duration;
 
                     let mut unique = true;
-                    for i in 0..tasks_dur.len() {
-                        let (td_task, dur) = &tasks_dur[i];
+                    for (td_task, dur) in &mut tasks_dur {
                         if td_task == &task.task_name {
-                            let new_dur = dur + tag_duration;
-                            tasks_dur[i] = (task.task_name.clone(), new_dur);
+                            *dur += tag_duration;
                             unique = false;
                         }
                     }

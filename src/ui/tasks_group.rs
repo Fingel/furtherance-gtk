@@ -84,13 +84,12 @@ impl FurTasksGroup {
 
         for task in &tasks {
             let mut unique = true;
-            for i in 0..tasks_by_name.len() {
-                if tasks_by_name[i][0].task_name == task.task_name
-                    && ((settings_manager::get_bool("show-tags")
-                        && tasks_by_name[i][0].tags == task.tags)
+            for task_vec in &mut tasks_by_name {
+                if task_vec[0].task_name == task.task_name
+                    && ((settings_manager::get_bool("show-tags") && task_vec[0].tags == task.tags)
                         || !settings_manager::get_bool("show-tags"))
                 {
-                    tasks_by_name[i].push(task.clone());
+                    task_vec.push(task.clone());
                     unique = false;
                 }
             }
