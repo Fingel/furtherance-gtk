@@ -100,6 +100,8 @@ glib::wrapper! {
         @implements gtk::Buildable, gtk::ConstraintTarget, gtk::Native, gtk::Root, gtk::ShortcutManager;
 }
 
+type TasksByDuration = Vec<(String, i64, Vec<(String, i64)>)>;
+
 impl FurReport {
     pub fn new() -> Self {
         let dialog: Self = glib::Object::new::<FurReport>();
@@ -347,7 +349,7 @@ impl FurReport {
                 }
             }
 
-            let mut sorted_tasks_by_duration: Vec<(String, i64, Vec<(String, i64)>)> = Vec::new();
+            let mut sorted_tasks_by_duration: TasksByDuration = Vec::new();
             for tbn in tasks_by_name {
                 let mut total_duration: i64 = 0;
                 let mut tags_dur: Vec<(String, i64)> = Vec::new();
@@ -419,7 +421,7 @@ impl FurReport {
                 }
             }
 
-            let mut sorted_tasks_by_duration: Vec<(String, i64, Vec<(String, i64)>)> = Vec::new();
+            let mut sorted_tasks_by_duration: TasksByDuration = Vec::new();
             for tbt in tasks_by_tag {
                 let mut total_duration: i64 = 0;
                 let mut tasks_dur: Vec<(String, i64)> = Vec::new();
