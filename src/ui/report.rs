@@ -188,7 +188,8 @@ impl FurReport {
         let mut range_end_date = today;
         if active_range == "this_week_item" {
             let current_week = today.iso_week().week();
-            (range_start_date, range_end_date) = FurReport::week_bounds(today.weekday(), current_week);
+            (range_start_date, range_end_date) =
+                FurReport::week_bounds(today.weekday(), current_week);
         } else if active_range == "last_week_item" {
             let last_week = today.iso_week().week() - 1;
             (range_start_date, range_end_date) = FurReport::week_bounds(today.weekday(), last_week);
@@ -506,4 +507,3 @@ impl FurReport {
         format!("{:02}:{:02}:{:02}", h, m, s)
     }
 }
-

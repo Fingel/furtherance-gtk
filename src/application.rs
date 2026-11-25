@@ -350,7 +350,7 @@ impl FurtheranceApplication {
             &[
                 (&gettext("Cancel"), gtk::ResponseType::Reject),
                 (&gettext("Save"), gtk::ResponseType::Accept),
-            ]
+            ],
         );
         dialog.set_modal(true);
 
@@ -376,7 +376,6 @@ impl FurtheranceApplication {
         );
 
         dialog.show();
-
     }
 
     pub fn import_database(&self) {
@@ -388,7 +387,7 @@ impl FurtheranceApplication {
             &[
                 (&gettext("Cancel"), gtk::ResponseType::Reject),
                 (&gettext("Open"), gtk::ResponseType::Accept),
-            ]
+            ],
         );
         dialog.set_modal(true);
 
@@ -427,4 +426,3 @@ impl Default for FurtheranceApplication {
             .unwrap()
     }
 }
-

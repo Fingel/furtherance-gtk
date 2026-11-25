@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use adw::subclass::prelude::*;
-use chrono::{offset::TimeZone, DateTime, Local, NaiveDateTime, ParseError, Duration};
+use chrono::{offset::TimeZone, DateTime, Duration, Local, NaiveDateTime, ParseError};
 use gettextrs::*;
 use glib::clone;
 use gtk::{glib, prelude::*, CompositeTemplate};
@@ -122,7 +122,8 @@ impl FurTaskDetails {
         *imp.this_task_tags.borrow_mut() = task_group[0].tags.clone();
         *imp.this_day.borrow_mut() = this_day_str.format("%F").to_string();
         *imp.orig_tags.borrow_mut() = task_group[0].tags.clone();
-        *imp.orig_name_with_tags.borrow_mut() = task_group[0].task_name.clone() + " #" + &task_group[0].tags.clone();
+        *imp.orig_name_with_tags.borrow_mut() =
+            task_group[0].task_name.clone() + " #" + &task_group[0].tags.clone();
 
         for task in task_group.clone() {
             imp.all_task_ids.borrow_mut().push(task.id);

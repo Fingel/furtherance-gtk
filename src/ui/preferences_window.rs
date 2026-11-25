@@ -21,10 +21,10 @@ use glib::clone;
 use gtk::glib;
 use gtk::CompositeTemplate;
 
+use crate::database;
 use crate::settings_manager;
 use crate::ui::FurtheranceWindow;
 use crate::FurtheranceApplication;
-use crate::database;
 
 mod imp {
     use super::*;
@@ -238,7 +238,7 @@ impl FurPreferencesWindow {
             .connect_enable_expansion_notify(move |_| {
                 let window = FurtheranceWindow::default();
                 window.refresh_timer();
-        });
+            });
 
         imp.pomodoro_spin.connect_value_changed(move |new_val| {
             settings_manager::set_int("pomodoro-time", new_val.value() as i32);
@@ -251,52 +251,52 @@ impl FurPreferencesWindow {
             window.reset_history_box();
         });
 
-        imp.database_browse_btn.connect_clicked(clone!(@weak self as this => move |_| {
-            let window = FurtheranceApplication::default().active_window().unwrap();
-            let dialog = gtk::FileChooserDialog::new(
-                Some(&gettext("Backup Database")),
-                Some(&window),
-                gtk::FileChooserAction::Save,
-                &[
-                    (&gettext("Cancel"), gtk::ResponseType::Reject),
-                    (&gettext("Save"), gtk::ResponseType::Accept),
-                ]
-            );
-            dialog.set_modal(true);
+        imp.database_browse_btn
+            .connect_clicked(clone!(@weak self as this => move |_| {
+                let window = FurtheranceApplication::default().active_window().unwrap();
+                let dialog = gtk::FileChooserDialog::new(
+                    Some(&gettext("Backup Database")),
+                    Some(&window),
+                    gtk::FileChooserAction::Save,
+                    &[
+                        (&gettext("Cancel"), gtk::ResponseType::Reject),
+                        (&gettext("Save"), gtk::ResponseType::Accept),
+                    ]
+                );
+                dialog.set_modal(true);
 
-            // Set a filter to show only SQLite files
-            let filter = gtk::FileFilter::new();
-            gtk::FileFilter::set_name(&filter, Some("*.db"));
-            filter.add_mime_type("application/x-sqlite3");
-            dialog.add_filter(&filter);
-            dialog.set_current_name("furtherance.db");
+                // Set a filter to show only SQLite files
+                let filter = gtk::FileFilter::new();
+                gtk::FileFilter::set_name(&filter, Some("*.db"));
+                filter.add_mime_type("application/x-sqlite3");
+                dialog.add_filter(&filter);
+                dialog.set_current_name("furtherance.db");
 
-            dialog.connect_response(
-                clone!(@strong dialog, @weak this as this2 => move |filechooser, resp| {
-                    if resp == gtk::ResponseType::Accept {
-                        if let Some(path) = filechooser.file().and_then(|file| file.path()) {
-                            let path = &path.to_string_lossy();
-                            let _bkup = database::backup_db(path.to_string());
+                dialog.connect_response(
+                    clone!(@strong dialog, @weak this as this2 => move |filechooser, resp| {
+                        if resp == gtk::ResponseType::Accept {
+                            if let Some(path) = filechooser.file().and_then(|file| file.path()) {
+                                let path = &path.to_string_lossy();
+                                let _bkup = database::backup_db(path.to_string());
 
-                            let settings = settings_manager::get_settings();
-                            let _ = settings.set_string("database-loc", &path.to_string());
+                                let settings = settings_manager::get_settings();
+                                let _ = settings.set_string("database-loc", &path.to_string());
 
-                            let imp2 = imp::FurPreferencesWindow::from_obj(&this2);
-                            imp2.database_loc_row.set_subtitle(&path.to_string());
+                                let imp2 = imp::FurPreferencesWindow::from_obj(&this2);
+                                imp2.database_loc_row.set_subtitle(&path.to_string());
 
-                            let window = FurtheranceWindow::default();
-                            window.reset_history_box();
+                                let window = FurtheranceWindow::default();
+                                window.reset_history_box();
+                            }
+                            dialog.close();
+                        } else {
+                            dialog.close();
                         }
-                        dialog.close();
-                    } else {
-                        dialog.close();
-                    }
-                }),
-            );
+                    }),
+                );
 
-            dialog.show();
+                dialog.show();
 
-        }));
+            }));
     }
 }
-

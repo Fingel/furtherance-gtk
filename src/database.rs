@@ -18,16 +18,16 @@ use chrono::{DateTime, Local};
 use directories::ProjectDirs;
 use gettextrs::*;
 use glib::clone;
-use gtk::prelude::*;
 use gtk::glib;
-use rusqlite::{Connection, Result, backup};
+use gtk::prelude::*;
+use rusqlite::{backup, Connection, Result};
 use std::convert::TryFrom;
 use std::fs::create_dir_all;
 use std::path::PathBuf;
 use std::time::Duration;
 
-use crate::ui::FurtheranceWindow;
 use crate::settings_manager;
+use crate::ui::FurtheranceWindow;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Task {
@@ -270,7 +270,7 @@ pub fn export_as_csv(sort: TaskSort, order: SortOrder, delimiter: u8) -> anyhow:
         let start_time = DateTime::parse_from_rfc3339(&task.start_time).unwrap();
         let stop_time = DateTime::parse_from_rfc3339(&task.stop_time).unwrap();
         let duration = stop_time - start_time;
-        csv_writer.serialize(CSVTask{
+        csv_writer.serialize(CSVTask {
             id: task.id,
             task_name: task.task_name,
             start_time: task.start_time,
@@ -353,14 +353,19 @@ pub fn get_list_by_id(id_list: Vec<i32>) -> Result<Vec<Task>, rusqlite::Error> {
     Ok(tasks_vec)
 }
 
-pub fn get_list_by_name_and_tags(task_name: String, tag_list: Vec<String>) -> Result<Vec<Task>, rusqlite::Error> {
+pub fn get_list_by_name_and_tags(
+    task_name: String,
+    tag_list: Vec<String>,
+) -> Result<Vec<Task>, rusqlite::Error> {
     let conn = Connection::open(get_directory())?;
 
     let name_param = format!("%{}%", task_name);
     let tag_list_params: Vec<String> = tag_list.iter().map(|tag| format!("%{}%", tag)).collect();
 
     let mut sql_query = String::from("SELECT * FROM tasks WHERE lower(task_name) LIKE lower(?)");
-    tag_list_params.iter().for_each(|_| sql_query.push_str(" AND lower(tags) LIKE lower(?)"));
+    tag_list_params
+        .iter()
+        .for_each(|_| sql_query.push_str(" AND lower(tags) LIKE lower(?)"));
     sql_query.push_str(" ORDER BY task_name");
 
     let mut query = conn.prepare(sql_query.as_str())?;
@@ -369,15 +374,19 @@ pub fn get_list_by_name_and_tags(task_name: String, tag_list: Vec<String>) -> Re
         query.raw_bind_parameter(i + 2, tag)?;
     }
 
-    let tasks_vec = query.raw_query().mapped(|row| {
-        Ok(Task {
-            id: row.get(0)?,
-            task_name: row.get(1)?,
-            start_time: row.get(2)?,
-            stop_time: row.get(3)?,
-            tags: row.get(4)?,
+    let tasks_vec = query
+        .raw_query()
+        .mapped(|row| {
+            Ok(Task {
+                id: row.get(0)?,
+                task_name: row.get(1)?,
+                start_time: row.get(2)?,
+                stop_time: row.get(3)?,
+                tags: row.get(4)?,
+            })
         })
-    }).map(|task_item| task_item.unwrap()).collect();
+        .map(|task_item| task_item.unwrap())
+        .collect();
 
     Ok(tasks_vec)
 }
@@ -440,7 +449,7 @@ pub fn import_db(new_db: String) -> Result<()> {
     let new_conn = Connection::open(new_db.clone())?;
     let valid = match check_db_validity(new_db) {
         Ok(_) => true,
-        Err(_) => false
+        Err(_) => false,
     };
 
     if valid {

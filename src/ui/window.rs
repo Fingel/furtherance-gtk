@@ -22,7 +22,7 @@ use directories::ProjectDirs;
 use gettextrs::*;
 use glib::{clone, timeout_add_local, ControlFlow};
 use gtk::subclass::prelude::*;
-use gtk::{Application, gio, glib, CompositeTemplate};
+use gtk::{gio, glib, Application, CompositeTemplate};
 use itertools::Itertools;
 use std::cell::RefCell;
 use std::convert::TryFrom;
@@ -123,7 +123,6 @@ impl FurtheranceWindow {
             .build()
     }
 
-
     pub fn display_toast(&self, text: &str) {
         // Display in-app notifications
         let imp = imp::FurtheranceWindow::from_obj(self);
@@ -166,7 +165,8 @@ impl FurtheranceWindow {
     pub fn reset_autocomplete(&self) {
         let imp = imp::FurtheranceWindow::from_obj(self);
         if settings_manager::get_bool("autocomplete") {
-            imp.task_input.set_completion(Some(&FurtheranceWindow::create_autocomplete()));
+            imp.task_input
+                .set_completion(Some(&FurtheranceWindow::create_autocomplete()));
         } else {
             imp.task_input.set_completion(None);
         }
@@ -195,7 +195,8 @@ impl FurtheranceWindow {
         self.refresh_timer();
 
         if settings_manager::get_bool("autocomplete") {
-            imp.task_input.set_completion(Some(&FurtheranceWindow::create_autocomplete()));
+            imp.task_input
+                .set_completion(Some(&FurtheranceWindow::create_autocomplete()));
         }
 
         imp.task_input.grab_focus();
@@ -572,7 +573,10 @@ impl FurtheranceWindow {
         imp.task_input.set_activates_default(true);
     }
 
-    fn update_list_model(task_name: String, tag_list: Vec<String>) -> Result<gtk::ListStore, anyhow::Error> {
+    fn update_list_model(
+        task_name: String,
+        tag_list: Vec<String>,
+    ) -> Result<gtk::ListStore, anyhow::Error> {
         let col_types: [glib::Type; 1] = [glib::Type::STRING];
         let mut task_list = database::get_list_by_name_and_tags(task_name, tag_list)?;
         task_list.dedup_by(|a, b| a.task_name == b.task_name && a.tags == b.tags);
@@ -833,7 +837,7 @@ impl FurtheranceWindow {
         let task_autocomplete = gtk::EntryCompletion::new();
         task_autocomplete.set_text_column(0);
         task_autocomplete.set_minimum_key_length(FurtheranceWindow::MIN_PREFIX_LENGTH);
-        task_autocomplete.set_match_func(|_ac, _s, _it| { true });
+        task_autocomplete.set_match_func(|_ac, _s, _it| true);
         task_autocomplete
     }
 
@@ -901,7 +905,9 @@ impl FurtheranceWindow {
                 .write_all_future(bytes, glib::source::Priority::DEFAULT)
                 .await
                 .map_err(|e| anyhow::anyhow!(e.1))?;
-            output_stream.close_future(glib::source::Priority::DEFAULT).await?;
+            output_stream
+                .close_future(glib::source::Priority::DEFAULT)
+                .await?;
 
             Ok(())
         }
@@ -1009,4 +1015,3 @@ impl Default for FurtheranceWindow {
             .unwrap()
     }
 }
-
