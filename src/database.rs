@@ -438,12 +438,8 @@ pub fn backup_db(backup_file: String) -> Result<()> {
 
 pub fn import_db(new_db: String) -> Result<()> {
     let new_conn = Connection::open(new_db.clone())?;
-    let valid = match check_db_validity(new_db) {
-        Ok(_) => true,
-        Err(_) => false,
-    };
 
-    if valid {
+    if check_db_validity(new_db).is_ok() {
         let mut conn = Connection::open(get_directory())?;
         let backup = backup::Backup::new(&new_conn, &mut conn)?;
         backup.run_to_completion(5, Duration::from_millis(250), None)

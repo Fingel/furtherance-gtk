@@ -177,11 +177,7 @@ impl FurtheranceWindow {
         let imp = imp::FurtheranceWindow::from_obj(self);
 
         // Set initial minimum height and alignment
-        let is_saved_task: bool = match database::check_for_tasks() {
-            Ok(_) => true,
-            Err(_) => false,
-        };
-        if is_saved_task {
+        if database::check_for_tasks().is_ok() {
             self.vertical_align(gtk::Align::Start);
         }
 

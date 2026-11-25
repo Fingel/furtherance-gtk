@@ -79,11 +79,7 @@ glib::wrapper! {
 impl FurHistoryBox {
     fn setup_widgets(&self) {
         self.set_view(View::Loading);
-        let is_saved_task: bool = match database::check_for_tasks() {
-            Ok(_) => true,
-            Err(_) => false,
-        };
-        if is_saved_task {
+        if database::check_for_tasks().is_ok() {
             self.set_view(View::Tasks);
         } else {
             self.set_view(View::Empty);
@@ -119,11 +115,7 @@ impl FurHistoryBox {
         let imp = imp::FurHistoryBox::from_obj(self);
         let window = FurtheranceWindow::default();
         imp.tasks_page.clear_task_list();
-        let is_saved_task: bool = match database::check_for_tasks() {
-            Ok(_) => true,
-            Err(_) => false,
-        };
-        if is_saved_task {
+        if database::check_for_tasks().is_ok() {
             window.vertical_align(gtk::Align::Start);
             self.set_view(View::Loading);
             imp.tasks_page.build_task_list();
