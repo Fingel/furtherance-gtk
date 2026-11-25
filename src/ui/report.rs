@@ -223,13 +223,13 @@ impl FurReport {
                 NaiveDate::parse_from_str(&imp.start_date_entry.text(), "%m/%d/%Y");
             let input_end_date = NaiveDate::parse_from_str(&imp.end_date_entry.text(), "%m/%d/%Y");
             // Check if user entered dates properly
-            if let Err(_) = input_start_date {
+            if input_start_date.is_err() {
                 imp.format_error.set_visible(true);
                 results_model.clear();
                 imp.results_tree.set_model(Some(&results_model));
                 return;
             }
-            if let Err(_) = input_end_date {
+            if input_end_date.is_err() {
                 imp.format_error.set_visible(true);
                 results_model.clear();
                 imp.results_tree.set_model(Some(&results_model));

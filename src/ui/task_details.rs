@@ -355,7 +355,7 @@ impl FurTaskDetails {
                                         );
                                     }
 
-                                    if let Err(_) = new_start_time {
+                                    if new_start_time.is_err() {
                                         instructions.set_visible(true);
                                         do_not_close = true;
                                     } else if (Local::now()
@@ -389,7 +389,7 @@ impl FurTaskDetails {
                                             time_formatter_no_secs,
                                         );
                                     }
-                                    if let Err(_) = new_stop_time {
+                                    if new_stop_time.is_err() {
                                         instructions.set_visible(true);
                                         do_not_close = true;
                                     } else {
@@ -828,7 +828,7 @@ impl FurTaskDetails {
                                     time_formatter_no_secs,
                                 );
                             }
-                            if let Err(_) = new_start_time {
+                            if new_start_time.is_err() {
                                 instructions.set_visible(true);
                                 do_not_close = true;
                             } else {
@@ -854,7 +854,7 @@ impl FurTaskDetails {
                                     time_formatter_no_secs,
                                 );
                             }
-                            if let Err(_) = new_stop_time {
+                            if new_stop_time.is_err() {
                                 instructions.set_visible(true);
                                 do_not_close = true;
                             } else {
