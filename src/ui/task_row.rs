@@ -16,7 +16,7 @@
 
 use chrono::DateTime;
 use gtk::subclass::prelude::*;
-use gtk::{gio, glib, prelude::*, CompositeTemplate};
+use gtk::{CompositeTemplate, gio, glib, prelude::*};
 use once_cell::sync::Lazy;
 use std::sync::Mutex;
 

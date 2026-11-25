@@ -17,13 +17,13 @@
 use adw::subclass::prelude::*;
 use chrono::{DateTime, Datelike, Duration, Local, NaiveDate, Weekday};
 use gettextrs::*;
-use gtk::{glib, prelude::*, CompositeTemplate};
+use gtk::{CompositeTemplate, glib, prelude::*};
 use itertools::Itertools;
 
+use crate::FurtheranceApplication;
 use crate::database::{self, SortOrder, TaskSort};
 use crate::settings_manager;
 use crate::ui::FurtheranceWindow;
-use crate::FurtheranceApplication;
 
 mod imp {
     use super::*;

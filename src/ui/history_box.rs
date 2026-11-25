@@ -16,11 +16,11 @@
 
 use glib::subclass;
 use gtk::subclass::prelude::*;
-use gtk::{glib, CompositeTemplate};
+use gtk::{CompositeTemplate, glib};
 
+use crate::FurtheranceApplication;
 use crate::database;
 use crate::ui::{FurTasksPage, FurtheranceWindow};
-use crate::FurtheranceApplication;
 
 enum View {
     Loading,

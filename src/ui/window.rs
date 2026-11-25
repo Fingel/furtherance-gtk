@@ -16,28 +16,28 @@
 
 use adw::prelude::*;
 use adw::subclass::prelude::AdwApplicationWindowImpl;
-use chrono::{offset::TimeZone, DateTime, Duration as ChronDur, Local, NaiveDateTime};
+use chrono::{DateTime, Duration as ChronDur, Local, NaiveDateTime, offset::TimeZone};
 use dbus::blocking::Connection;
 use directories::ProjectDirs;
 use gettextrs::*;
-use glib::{timeout_add_local, ControlFlow};
+use glib::{ControlFlow, timeout_add_local};
 use gtk::subclass::prelude::*;
-use gtk::{gio, glib, Application, CompositeTemplate};
+use gtk::{Application, CompositeTemplate, gio, glib};
 use itertools::Itertools;
 use std::cell::RefCell;
 use std::convert::TryFrom;
-use std::fs::{create_dir_all, remove_file, File};
+use std::fs::{File, create_dir_all, remove_file};
 use std::io::{self, BufRead, BufReader, BufWriter, Write};
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::Mutex;
 use std::time::Duration;
 
+use crate::FurtheranceApplication;
 use crate::config;
 use crate::database::{self, SortOrder, TaskSort};
 use crate::settings_manager;
 use crate::ui::FurHistoryBox;
-use crate::FurtheranceApplication;
 
 mod imp {
     use super::*;

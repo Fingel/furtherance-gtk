@@ -17,13 +17,13 @@
 use adw::prelude::*;
 use adw::subclass::prelude::*;
 use gettextrs::*;
-use gtk::glib;
 use gtk::CompositeTemplate;
+use gtk::glib;
 
+use crate::FurtheranceApplication;
 use crate::database;
 use crate::settings_manager;
 use crate::ui::FurtheranceWindow;
-use crate::FurtheranceApplication;
 
 mod imp {
     use super::*;

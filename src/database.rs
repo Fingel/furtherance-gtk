@@ -19,7 +19,7 @@ use directories::ProjectDirs;
 use gettextrs::*;
 use gtk::glib;
 use gtk::prelude::*;
-use rusqlite::{backup, Connection, Result};
+use rusqlite::{Connection, Result, backup};
 use std::convert::TryFrom;
 use std::fmt::Display;
 use std::fs::create_dir_all;
