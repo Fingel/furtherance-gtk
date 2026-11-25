@@ -16,8 +16,7 @@
 
 use adw::prelude::{PreferencesGroupExt, PreferencesPageExt};
 use adw::subclass::prelude::*;
-use chrono::{DateTime, Duration, Local};
-use chrono_locale::LocaleDate;
+use chrono::{DateTime, Duration, Local, Locale};
 use gettextrs::*;
 use gtk::glib;
 use std::env;
@@ -121,16 +120,10 @@ impl FurTasksPage {
     pub fn build_task_list(&self) {
         let imp = imp::FurTasksPage::from_obj(&self);
 
-        // Get user's locale for date formatting
-        let locale_env = env::var("LANG");
-        let user_locale: String;
-        if let Err(_) = locale_env {
-            user_locale = "en_US".to_string();
-        } else {
-            let locale_env = locale_env.unwrap();
-            let split_locale: Vec<&str> = locale_env.split(".").collect();
-            user_locale = split_locale[0].to_string();
-        }
+        let user_locale = env::var("LANG")
+            .ok()
+            .and_then(|lang| lang.split('.').next()?.parse::<Locale>().ok())
+            .unwrap_or(Locale::en_US);
 
         let tasks_list = database::retrieve(TaskSort::StartTime, SortOrder::Descending).unwrap();
 
@@ -144,7 +137,7 @@ impl FurTasksPage {
         for task in tasks_list {
             let task_clone = task.clone();
             let date = DateTime::parse_from_rfc3339(&task.start_time).unwrap();
-            let date = date.formatl("%h %e", &user_locale).to_string();
+            let date = date.format_localized("%h %e", user_locale).to_string();
             if !uniq_date_list.contains(&date) {
                 // if same_date_list is empty, push "date" to it
                 // if it is not empty, push it to a vec of vecs, and then clear it
@@ -180,8 +173,8 @@ impl FurTasksPage {
         // Create FurTasksGroups for all unique days
         let now = Local::now();
         let yesterday = now - Duration::days(1);
-        let yesterday = yesterday.formatl("%h %e", &user_locale).to_string();
-        let today = now.formatl("%h %e", &user_locale).to_string();
+        let yesterday = yesterday.format_localized("%h %e", user_locale).to_string();
+        let today = now.format_localized("%h %e", user_locale).to_string();
         for i in 0..uniq_date_list.len() {
             let group = FurTasksGroup::new();
             if uniq_date_list[i] == today {
