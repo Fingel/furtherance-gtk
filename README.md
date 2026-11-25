@@ -4,7 +4,7 @@ of [unobserved-io/furtherance](https://github.com/unobserved-io/Furtherance) mai
 the original GTK interface.
 
 <p align="center">
-    <img width="500px" src="https://github.com/lakoliu/Furtherance/raw/main/data/screenshots/furtherance-2023-06-06.png" alt="Furtherance screenshot"/>
+<img width="410" height="650" alt="image" src="https://github.com/user-attachments/assets/d6d48ee1-f0c7-461a-9b87-8ea2e20e0008" />
 </p>
 
 ## Features
