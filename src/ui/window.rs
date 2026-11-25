@@ -1048,35 +1048,28 @@ impl FurtheranceWindow {
             #[weak]
             sortorder_row,
             move |dialog, response| {
-                match response {
-                    gtk::ResponseType::Apply => {
-                        let sort = TaskSort::try_from(tasksort_row.selected()).unwrap_or_default();
-                        let order =
-                            SortOrder::try_from(sortorder_row.selected()).unwrap_or_default();
+                if response == gtk::ResponseType::Apply {
+                    let sort = TaskSort::try_from(tasksort_row.selected()).unwrap_or_default();
+                    let order = SortOrder::try_from(sortorder_row.selected()).unwrap_or_default();
 
-                        if let Some(file) = filechooser.file() {
-                            glib::MainContext::default().spawn_local(glib::clone!(
-                                #[strong]
-                                window,
-                                #[strong]
-                                file,
-                                async move {
-                                    if let Err(e) =
-                                        FurtheranceWindow::export_csv_to_file(sort, order, &file)
-                                            .await
-                                    {
-                                        log::error!("replace file {:?} failed, Err {}", file, e);
-                                        window.display_toast(&gettext("Exporting as CSV failed."));
-                                    } else {
-                                        window.display_toast(&gettext(
-                                            "Exported as CSV successfully.",
-                                        ));
-                                    };
-                                }
-                            ));
-                        }
+                    if let Some(file) = filechooser.file() {
+                        glib::MainContext::default().spawn_local(glib::clone!(
+                            #[strong]
+                            window,
+                            #[strong]
+                            file,
+                            async move {
+                                if let Err(e) =
+                                    FurtheranceWindow::export_csv_to_file(sort, order, &file).await
+                                {
+                                    log::error!("replace file {:?} failed, Err {}", file, e);
+                                    window.display_toast(&gettext("Exporting as CSV failed."));
+                                } else {
+                                    window.display_toast(&gettext("Exported as CSV successfully."));
+                                };
+                            }
+                        ));
                     }
-                    _ => {}
                 }
 
                 dialog.close();
