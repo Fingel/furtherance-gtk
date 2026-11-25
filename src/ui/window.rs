@@ -1029,8 +1029,6 @@ impl FurtheranceWindow {
         filechooser.set_current_name("data.csv");
 
         filechooser_button.connect_clicked(glib::clone!(
-            #[weak(rename_to = window)]
-            self,
             #[weak]
             filechooser,
             #[weak]

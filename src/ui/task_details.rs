@@ -329,8 +329,6 @@ impl FurTaskDetails {
                         task.start_time,
                         #[strong(rename_to = stop_time)]
                         task.stop_time,
-                        #[strong(rename_to = tags)]
-                        task.tags,
                         move |_, resp| {
                             if resp == gtk::ResponseType::Ok {
                                 instructions.set_visible(false);

@@ -119,24 +119,16 @@ impl FurtheranceApplication {
         self.add_action(&quit_action);
 
         let preferences_action = gio::SimpleAction::new("preferences", None);
-        preferences_action.connect_activate(glib::clone!(
-            #[weak(rename_to = app)]
-            self,
-            move |_, _| {
-                FurPreferencesWindow::new().show();
-            }
-        ));
+        preferences_action.connect_activate(glib::clone!(move |_, _| {
+            FurPreferencesWindow::new().show();
+        }));
         self.set_accels_for_action("app.preferences", &["<primary>comma"]);
         self.add_action(&preferences_action);
 
         let report_action = gio::SimpleAction::new("report", None);
-        report_action.connect_activate(glib::clone!(
-            #[weak(rename_to = app)]
-            self,
-            move |_, _| {
-                FurReport::new().show();
-            }
-        ));
+        report_action.connect_activate(glib::clone!(move |_, _| {
+            FurReport::new().show();
+        }));
         self.set_accels_for_action("app.report", &["<primary>R"]);
         self.add_action(&report_action);
 
@@ -161,40 +153,32 @@ impl FurtheranceApplication {
         self.add_action(&import_database_action);
 
         let discard_idle_action = gio::SimpleAction::new("discard-idle-action", None);
-        discard_idle_action.connect_activate(glib::clone!(
-            #[weak(rename_to = app)]
-            self,
-            move |_, _| {
-                let window = FurtheranceWindow::default();
-                let imp = window.imp();
-                if *imp.running.lock().unwrap() && *imp.idle_time_reached.lock().unwrap() {
-                    window
-                        .imp()
-                        .idle_dialog
-                        .lock()
-                        .unwrap()
-                        .response(gtk::ResponseType::Reject);
-                }
+        discard_idle_action.connect_activate(glib::clone!(move |_, _| {
+            let window = FurtheranceWindow::default();
+            let imp = window.imp();
+            if *imp.running.lock().unwrap() && *imp.idle_time_reached.lock().unwrap() {
+                window
+                    .imp()
+                    .idle_dialog
+                    .lock()
+                    .unwrap()
+                    .response(gtk::ResponseType::Reject);
             }
-        ));
+        }));
         self.add_action(&discard_idle_action);
 
         let continue_idle_action = gio::SimpleAction::new("continue-idle-action", None);
-        continue_idle_action.connect_activate(glib::clone!(
-            #[weak(rename_to = app)]
-            self,
-            move |_, _| {
-                let window = FurtheranceWindow::default();
-                if *window.imp().running.lock().unwrap() {
-                    window
-                        .imp()
-                        .idle_dialog
-                        .lock()
-                        .unwrap()
-                        .response(gtk::ResponseType::Accept);
-                }
+        continue_idle_action.connect_activate(glib::clone!(move |_, _| {
+            let window = FurtheranceWindow::default();
+            if *window.imp().running.lock().unwrap() {
+                window
+                    .imp()
+                    .idle_dialog
+                    .lock()
+                    .unwrap()
+                    .response(gtk::ResponseType::Accept);
             }
-        ));
+        }));
         self.add_action(&continue_idle_action);
 
         let continue_pomodoro_action = gio::SimpleAction::new("continue-pomodoro-action", None);
@@ -322,14 +306,10 @@ impl FurtheranceApplication {
     pub fn export_csv_enabled(&self, enabled: bool) {
         if enabled {
             let export_csv_action = gio::SimpleAction::new("export-csv", None);
-            export_csv_action.connect_activate(glib::clone!(
-                #[weak(rename_to = app)]
-                self,
-                move |_, _| {
-                    let window = FurtheranceWindow::default();
-                    window.open_csv_export_dialog();
-                }
-            ));
+            export_csv_action.connect_activate(glib::clone!(move |_, _| {
+                let window = FurtheranceWindow::default();
+                window.open_csv_export_dialog();
+            }));
             self.add_action(&export_csv_action);
         } else {
             self.remove_action("export-csv");
@@ -431,8 +411,6 @@ impl FurtheranceApplication {
         dialog.connect_response(glib::clone!(
             #[strong]
             dialog,
-            #[weak(rename_to = this)]
-            self,
             move |filechooser, resp| {
                 if resp == gtk::ResponseType::Accept {
                     if let Some(path) = filechooser.file().and_then(|file| file.path()) {
@@ -471,8 +449,6 @@ impl FurtheranceApplication {
         dialog.connect_response(glib::clone!(
             #[strong]
             dialog,
-            #[weak(rename_to = this)]
-            self,
             move |filechooser, resp| {
                 if resp == gtk::ResponseType::Accept {
                     if let Some(path) = filechooser.file().and_then(|file| file.path()) {
