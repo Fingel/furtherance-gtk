@@ -79,7 +79,8 @@ mod imp {
 glib::wrapper! {
     pub struct FurTaskRow(
         ObjectSubclass<imp::FurTaskRow>)
-        @extends gtk::Widget, gtk::ListBoxRow;
+        @extends gtk::Widget, gtk::ListBoxRow,
+        @implements gtk::Buildable, gtk::ConstraintTarget, gtk::Actionable;
 }
 
 impl FurTaskRow {

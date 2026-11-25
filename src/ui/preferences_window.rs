@@ -129,8 +129,8 @@ mod imp {
 glib::wrapper! {
     pub struct FurPreferencesWindow(
         ObjectSubclass<imp::FurPreferencesWindow>)
-        @extends gtk::Widget, gtk::Window, adw::Window, adw::PreferencesWindow;
-
+        @extends gtk::Widget, gtk::Window, adw::Window, adw::PreferencesWindow,
+        @implements gtk::Buildable, gtk::ConstraintTarget, gtk::Native, gtk::Root, gtk::ShortcutManager;
 }
 
 impl FurPreferencesWindow {

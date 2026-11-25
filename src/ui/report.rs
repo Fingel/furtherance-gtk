@@ -97,7 +97,8 @@ mod imp {
 
 glib::wrapper! {
     pub struct FurReport(ObjectSubclass<imp::FurReport>)
-        @extends gtk::Widget, gtk::Window, adw::Window;
+        @extends gtk::Widget, gtk::Window, adw::Window,
+        @implements gtk::Buildable, gtk::ConstraintTarget, gtk::Native, gtk::Root, gtk::ShortcutManager;
 }
 
 impl FurReport {

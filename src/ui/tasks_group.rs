@@ -61,7 +61,8 @@ mod imp {
 glib::wrapper! {
     pub struct FurTasksGroup(
         ObjectSubclass<imp::FurTasksGroup>)
-        @extends gtk::Widget, adw::PreferencesGroup;
+        @extends gtk::Widget, adw::PreferencesGroup,
+        @implements gtk::Buildable, gtk::ConstraintTarget;
 }
 
 impl FurTasksGroup {

@@ -110,8 +110,9 @@ mod imp {
 
 glib::wrapper! {
     pub struct FurtheranceWindow(ObjectSubclass<imp::FurtheranceWindow>)
-        @extends gtk::Widget, gtk::Window, gtk::ApplicationWindow,
-        @implements gio::ActionGroup, gio::ActionMap;
+        @extends gtk::Widget, gtk::Window, gtk::ApplicationWindow, adw::ApplicationWindow,
+        @implements gtk::Buildable, gtk::ConstraintTarget, gtk::Native, gtk::Root, gtk::ShortcutManager,
+            gio::ActionGroup, gio::ActionMap;
 }
 
 impl FurtheranceWindow {

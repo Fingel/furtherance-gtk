@@ -72,7 +72,8 @@ mod imp {
 glib::wrapper! {
     pub struct FurHistoryBox(
         ObjectSubclass<imp::FurHistoryBox>)
-        @extends gtk::Widget, gtk::Box;
+        @extends gtk::Widget, gtk::Box,
+        @implements gtk::Buildable, gtk::ConstraintTarget, gtk::Orientable;
 }
 
 impl FurHistoryBox {
