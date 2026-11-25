@@ -160,14 +160,14 @@ impl FurTasksPage {
                 tasks_sorted_by_day.push(same_date_list.clone());
             }
             i += 1;
-            if settings_manager::get_bool("limit-tasks") {
-                if uniq_date_list.len() > settings_manager::get_int("limit-days") as usize {
-                    if !same_date_list.is_empty() && i != len {
-                        tasks_sorted_by_day.push(same_date_list.clone());
-                    }
-                    uniq_date_list.pop();
-                    break;
+            if settings_manager::get_bool("limit-tasks")
+                && uniq_date_list.len() > settings_manager::get_int("limit-days") as usize
+            {
+                if !same_date_list.is_empty() && i != len {
+                    tasks_sorted_by_day.push(same_date_list.clone());
                 }
+                uniq_date_list.pop();
+                break;
             }
         }
 
