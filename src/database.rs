@@ -76,7 +76,7 @@ impl TryFrom<u32> for SortOrder {
 }
 
 impl SortOrder {
-    fn to_sqlite(&self) -> &str {
+    fn as_sql(&self) -> &str {
         match self {
             SortOrder::Ascending => "ASC",
             SortOrder::Descending => "DESC",
@@ -113,7 +113,7 @@ impl TryFrom<u32> for TaskSort {
 }
 
 impl TaskSort {
-    fn to_sqlite(&self) -> &str {
+    fn as_sql(&self) -> &str {
         match self {
             Self::StartTime => "start_time",
             Self::StopTime => "stop_time",
@@ -216,8 +216,8 @@ pub fn retrieve(sort: TaskSort, order: SortOrder) -> Result<Vec<Task>, rusqlite:
     let mut query = conn.prepare(
         format!(
             "SELECT * FROM tasks ORDER BY {0} {1}",
-            sort.to_sqlite(),
-            order.to_sqlite()
+            sort.as_sql(),
+            order.as_sql()
         )
         .as_str(),
     )?;
