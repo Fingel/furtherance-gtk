@@ -938,7 +938,7 @@ impl FurtheranceWindow {
             let mut hrs: i32 = 0;
             if mins > 59 {
                 hrs = mins / 60;
-                mins = mins % 60;
+                mins %= 60;
             }
             let watch_text: &str = &format!("{:02}:{:02}:00", hrs, mins);
             imp.watch.set_text(watch_text);
