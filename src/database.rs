@@ -21,6 +21,7 @@ use gtk::glib;
 use gtk::prelude::*;
 use rusqlite::{backup, Connection, Result};
 use std::convert::TryFrom;
+use std::fmt::Display;
 use std::fs::create_dir_all;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -37,12 +38,12 @@ pub struct Task {
     pub tags: String,
 }
 
-impl ToString for Task {
-    fn to_string(&self) -> String {
+impl Display for Task {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if !self.tags.is_empty() {
-            format!("{} #{}", self.task_name, self.tags)
+            write!(f, "{} #{}", self.task_name, self.tags)
         } else {
-            self.task_name.to_string()
+            write!(f, "{}", self.task_name)
         }
     }
 }
