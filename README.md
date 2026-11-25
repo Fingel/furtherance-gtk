@@ -1,6 +1,7 @@
-# Furtherance
-Furtherance is a time tracking app, with a native interface on Gnome, Windows, and Mac.
-It allows you to track time spent on different activities without worrying about your data being captured and sold.
+# Furtherance-GTK
+Furtherance is a time tracking app, with a native interface on Gnome. This is a fork 
+of [unobserved-io/furtherance](https://github.com/unobserved-io/Furtherance) maintaining
+the original GTK interface.
 
 <p align="center">
     <img width="500px" src="https://github.com/lakoliu/Furtherance/raw/main/data/screenshots/furtherance-2023-06-06.png" alt="Furtherance screenshot"/>
