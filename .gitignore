@@ -1,6 +1,7 @@
 com.lakoliu.Furtherance.json~
 src/config.rs
 /.flatpak
+/.flatpak-builder/
 /.vscode
 /.DS_Store
 
