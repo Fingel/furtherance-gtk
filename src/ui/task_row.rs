@@ -151,13 +151,11 @@ impl FurTaskRow {
 
         // Add up all durations for task of said name to create total_time
         for task in &task_list {
-            if task.task_name == task.task_name {
-                let start_time = DateTime::parse_from_rfc3339(&task.start_time).unwrap();
-                let stop_time = DateTime::parse_from_rfc3339(&task.stop_time).unwrap();
+            let start_time = DateTime::parse_from_rfc3339(&task.start_time).unwrap();
+            let stop_time = DateTime::parse_from_rfc3339(&task.stop_time).unwrap();
 
-                let duration = stop_time - start_time;
-                *imp.total_time.borrow_mut() += duration.num_seconds();
-            }
+            let duration = stop_time - start_time;
+            *imp.total_time.borrow_mut() += duration.num_seconds();
         }
         // Format total time to readable string
         let h = *imp.total_time.borrow() / 3600;
