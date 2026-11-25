@@ -95,9 +95,7 @@ impl FurTasksGroup {
             }
             if unique {
                 // Add unique task to list for group name
-                let mut new_name_list: Vec<database::Task> = Vec::new();
-                new_name_list.push(task.clone());
-                tasks_by_name.push(new_name_list);
+                tasks_by_name.push(vec![task.clone()]);
             }
         }
 

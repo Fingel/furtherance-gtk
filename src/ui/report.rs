@@ -343,9 +343,7 @@ impl FurReport {
                 }
                 if unique {
                     // Add unique task to list for group name
-                    let mut new_name_list: Vec<(database::Task, i64)> = Vec::new();
-                    new_name_list.push((task.clone(), task_duration));
-                    tasks_by_name.push(new_name_list);
+                    tasks_by_name.push(vec![(task.clone(), task_duration)]);
                 }
             }
 
@@ -416,9 +414,7 @@ impl FurReport {
                     }
                     if unique {
                         // Add unique task to list for group name
-                        let mut new_name_list: Vec<(String, database::Task, i64)> = Vec::new();
-                        new_name_list.push((tag.to_string(), task.clone(), task_duration));
-                        tasks_by_tag.push(new_name_list);
+                        tasks_by_tag.push(vec![(tag.to_string(), task.clone(), task_duration)]);
                     }
                 }
             }
