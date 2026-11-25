@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use adw::subclass::prelude::*;
-use chrono::{offset::TimeZone, Date, DateTime, Datelike, Duration, Local, NaiveDate, Weekday};
+use chrono::{DateTime, Datelike, Duration, Local, NaiveDate, Weekday};
 use gettextrs::*;
 use gtk::{glib, prelude::*, CompositeTemplate};
 use itertools::Itertools;
@@ -197,8 +197,8 @@ impl FurReport {
 
         // Get date range
         let active_range = imp.range_combo.active_id().unwrap();
-        let today = Local::now().date();
-        let range_start_date: Date<Local>;
+        let today = Local::now().date_naive();
+        let range_start_date: NaiveDate;
         let mut range_end_date = today;
         if active_range == "this_week_item" {
             let current_week = today.iso_week().week();
@@ -235,14 +235,14 @@ impl FurReport {
                 imp.results_tree.set_model(Some(&results_model));
                 return;
             }
+            range_start_date = input_start_date.unwrap();
+            range_end_date = input_end_date.unwrap();
             // Start date cannot be after end date
-            if (input_end_date.unwrap() - input_start_date.unwrap()).num_days() < 0 {
+            if range_start_date > range_end_date {
                 imp.start_end_error.set_visible(true);
                 results_model.clear();
                 return;
             }
-            range_start_date = Local.from_local_date(&input_start_date.unwrap()).unwrap();
-            range_end_date = Local.from_local_date(&input_end_date.unwrap()).unwrap();
         }
 
         let mut total_time: i64 = 0;
@@ -257,7 +257,7 @@ impl FurReport {
                 .unwrap()
                 .with_timezone(&Local);
             // Check if start time is in date range and if not remove it from task_list
-            let start_date = start.date();
+            let start_date = start.date_naive();
             if start_date >= range_start_date && start_date <= range_end_date {
                 // Sort by only selected tasks or tags if filter is selected
                 if imp.filter_check.is_active() && !imp.filter_entry.text().trim().is_empty() {
@@ -490,7 +490,7 @@ impl FurReport {
         imp.results_tree.expand_row(&all_tasks_path, false);
     }
 
-    fn week_bounds(weekday: Weekday, mut week: u32) -> (Date<Local>, Date<Local>) {
+    fn week_bounds(weekday: Weekday, mut week: u32) -> (NaiveDate, NaiveDate) {
         let mut week_starts_on = Weekday::Mon;
         let mut week_ends_on = Weekday::Sun;
         // If user set week to start Sunday
@@ -500,17 +500,15 @@ impl FurReport {
         }
 
         let current_year = chrono::offset::Local::now().year();
-        let week_start = NaiveDate::from_isoywd(current_year, week, week_starts_on);
+        let week_start = NaiveDate::from_isoywd_opt(current_year, week, week_starts_on).unwrap();
 
         // If weekday start Sunday, add 1 to the week number only after getting the week start date
         if settings_manager::get_int("week-starts") == 1 && weekday == Weekday::Sun {
             week += 1;
         }
 
-        let week_end = NaiveDate::from_isoywd(current_year, week, week_ends_on);
-        let week_start_local = Local.from_local_date(&week_start).unwrap();
-        let week_end_local = Local.from_local_date(&week_end).unwrap();
-        (week_start_local, week_end_local)
+        let week_end = NaiveDate::from_isoywd_opt(current_year, week, week_ends_on).unwrap();
+        (week_start, week_end)
     }
 
     fn format_duration(total_time: i64) -> String {
