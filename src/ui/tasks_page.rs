@@ -16,7 +16,7 @@
 
 use adw::prelude::{PreferencesGroupExt, PreferencesPageExt};
 use adw::subclass::prelude::*;
-use chrono::{DateTime, Duration, Local, Locale};
+use chrono::{DateTime, Datelike, Duration, Local, Locale};
 use gettextrs::*;
 use gtk::glib;
 use std::env;
@@ -138,7 +138,11 @@ impl FurTasksPage {
         for task in tasks_list {
             let task_clone = task.clone();
             let date = DateTime::parse_from_rfc3339(&task.start_time).unwrap();
-            let date = date.format_localized("%h %e", user_locale).to_string();
+            let date = if date.year() != Local::now().year() {
+                date.format_localized("%h %e %Y", user_locale).to_string()
+            } else {
+                date.format_localized("%h %e", user_locale).to_string()
+            };
             if !uniq_date_list.contains(&date) {
                 // if same_date_list is empty, push "date" to it
                 // if it is not empty, push it to a vec of vecs, and then clear it
