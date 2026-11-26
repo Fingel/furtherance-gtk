@@ -49,7 +49,7 @@
                     <property name="margin_end">12</property>
                     <attributes>
                       <attribute name="weight" value="bold"/>
-                      <attribute name="scale" value="5"/>
+                      <attribute name="scale" value="4.4"/>
                     </attributes>
                     <style>
                       <class name="numeric"/>
