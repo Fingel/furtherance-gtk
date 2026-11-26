@@ -39,6 +39,13 @@
   <content_rating type="oars-1.1" />
 
   <releases>
+    <release version="1.9.2" date="2026-11-26">
+        <description translatable="no">
+            <ul>
+                <li>UI fixes for minor nits that have bugged me for years.</li>
+            </ul>
+        </description>
+    </release>
     <release version="1.9.1" date="2026-11-25">
         <description translatable="no">
             <ul>
