@@ -13,4 +13,6 @@ dev:
     meson install -C "{{ build_dir }}" --no-rebuild
 
     export XDG_DATA_DIRS="{{ prefix }}/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+    export RUST_LOG=debug
+    export GTK_DEBUG=builder
     exec "{{ prefix }}/bin/furtherance"
